@@ -73,7 +73,13 @@ void init_structs_global(void) {
                 error_exit("malloc failed scan_results array", 1);
             }      
             for (int j = 0; j < g_env.nb_scans; j++) {
+                if (port==121) {
+                    printf("%d\n", j);
+                }
                 g_env.results[i].ports_result[port].scan_results[j].change_me = false;
+                if (port==121&&j%2 == 1) {
+                    printf("%d %d %d\n", port+g_env.min_port, j, g_env.results[i].ports_result[port].scan_results[j].change_me);
+                }
             }      
             port++;
         }
@@ -101,7 +107,6 @@ int get_available_thread(void) {
             break ;
         }
     }
-    printf("out get_available_thread thread = %d\n", available_thread);
     return available_thread;
 }
 
@@ -114,14 +119,12 @@ t_scanner *init_scanner(int thread_id, int port, int scan_id) {
 
     g_env.threads_availability[thread_id] = false;
 
-    printf("init scanner, %d, %d, %d\n", scanner->thread_id, scanner->port, scanner->scan_id);
     return scanner;
 }
 
 void scan_thread(void *data) {
     t_scanner scanner = *(t_scanner *)data;
     g_env.results[g_env.ite_ip_host].ports_result[scanner.port].scan_results[scanner.scan_id].change_me = true;
-    printf("thread id = %d changed %d %d\n", scanner.thread_id, scanner.port, scanner.scan_id);
     pthread_mutex_lock(&(g_env.launch_thread_m));
     g_env.threads_availability[scanner.thread_id] = true;
     pthread_mutex_unlock(&(g_env.launch_thread_m));
@@ -132,7 +135,6 @@ void scan_loop(int port/*, ip_str, socket*/) {
     while (scan_id < g_env.nb_scans) {
         int thread_id = get_available_thread();
         t_scanner *scanner = init_scanner(thread_id, port, scan_id);
-        printf("port %d scan %d launch %d\n", port, scan_id, thread_id);
         if (pthread_create(&(g_env.scanner_threads[thread_id]), NULL, (void*)&scan_thread, (void*)scanner) != 0) {
             printf("thread %d failed\n", thread_id);
             error_exit("pthread_create failed", 1);
@@ -145,23 +147,23 @@ void ports_loop(/*ip_str, socket*/) {
     int ite_port = 0;
     int max_iter = g_env.max_port-g_env.min_port+1;
     while (ite_port < max_iter) {
-        scan_loop(ite_port+g_env.min_port/*, ip_str, socket*/);
+        scan_loop(ite_port/*, ip_str, socket*/);
         ite_port++;
     }
 }
 
 void wait_for_all_threads(void) {
     int nb_threads_free = 0;
-    printf("in wait_for_all_threads\n");
     while (nb_threads_free != g_env.nb_threads) {
         nb_threads_free = 0;
+        pthread_mutex_lock(&(g_env.launch_thread_m));
         for (int i = 0; i < g_env.nb_threads; i++) {
             if (g_env.threads_availability[i] == true) {
                 nb_threads_free++;
             }
         }
+        pthread_mutex_unlock(&(g_env.launch_thread_m));
     }
-    printf("out wait_for_all_threads\n");
 }
 
 void ip_loop(void) {
@@ -180,7 +182,7 @@ void ip_loop(void) {
         ports_loop(/*"ip_str", socket */);
         wait_for_all_threads();
         g_env.ite_ip_host++;
-    }  
+    }
 }
 
 int main(int ac, char **av) {
