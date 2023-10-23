@@ -82,6 +82,12 @@ typedef struct s_scanner {
     // sockaddr_in
 }   t_scanner;
 
-t_env g_env;
+extern t_env g_env;
+
+// ft_nmap.c
+void error_exit(char *err, int code);
+
+// loop.c
+void ip_loop(void);
 
 #endif
