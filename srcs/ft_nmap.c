@@ -48,6 +48,9 @@ int main(int ac, char **av) {
         usage();
         error_exit(NULL, 255);
     }
+	//parser returns -1 in case of error, 0 otherwise
+	if (parser(ac, av) == -1)
+		return ;
     (void)av;
     // init mutex(es) (at least one for global, maybe one for send/recv/pcap ?)
     // init global
