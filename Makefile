@@ -2,7 +2,7 @@ NAME = ft_nmap
 
 SRCS_DIR = ./srcs/
 
-SRCS =	ft_nmap.c parser.c
+SRCS =	ft_nmap.c parser.c ft_strsplit.c ft_strsub.c
 
 OBJS_DIR = objs/
 

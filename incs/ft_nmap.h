@@ -24,12 +24,15 @@
 
 # define NB_OPT 6
 
+# define NB_SCAN 6
+
 # define SYN 0x01
 # define NUL 0x02
 # define ACK 0x04
 # define FIN 0x08
 # define XMS 0x10
 # define UDP 0x20
+
 
 typedef struct	s_pars {
 	char		*port;
@@ -60,10 +63,13 @@ typedef struct s_env {
     int min_port;
     int max_port;
     int nb_threads;
+
 	int			*port;
 	int			nb_port;
-    // t_list *ip_and_hosts; // can be array ?
-    // t_list *scan_types; // can be array ?
+	char		*file;
+	int			scan;
+    //t_list *ip_and_hosts; // can be array ?
+    //t_list *scan_types; // can be array ?
 
     /*
     ** general storage structs for threads and results
@@ -106,5 +112,8 @@ typedef struct s_scanner {
 extern t_env g_env;
 
 int			parser(int ac, char **av, t_pars *data);
+char		**ft_strsplit(char const *s, char c);
+char	*ft_strsub(char const *s, unsigned int start, size_t len);
+
 
 #endif

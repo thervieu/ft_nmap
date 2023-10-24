@@ -29,6 +29,12 @@ Use %s --help to display help\n", prog_name, unknown, prog_name);
 	return (-1);
 }
 
+static int		display_scan_unknown(char *unknown)
+{
+	printf("Unknown scan type: %s\n", unknown);
+	return (-1);
+}
+
 static int		is_valid_opt(char *opt)
 {
 	static char		valid_opt[NB_OPT][8] = {"ports", "ip", "file", "speedup", "scan", "help"};
@@ -111,8 +117,7 @@ static int		format_port(char *port_string)
 	i = 0;
 	g_env.port[0] = atoi(port_string);
 	while (port_idx < g_env.nb_port) {
-		if (is_digit(port_string[i]) == 1)
-		{
+		if (is_digit(port_string[i]) == 1) {
 			val = atoi(port_string + i);
 			while (is_digit(port_string[i]) == 1)
 				i++;
@@ -122,7 +127,6 @@ static int		format_port(char *port_string)
 			val = atoi(port_string + i);
 			g_env.port[port_idx] = val;
 			port_idx++;
-			actual_port = i;
 			while (is_digit(port_string[i]) == 1)
 				i++;
 		}
@@ -144,13 +148,76 @@ static int		format_port(char *port_string)
 	return (0);
 }
 
+static int		format_speedup(char *speedup)
+{
+	int		i = 0;
+
+	if (!speedup)
+		return (0);
+	while (speedup[i]) {
+		if (is_digit(speedup[i]) == 0)
+			return (-1);
+		i++;
+	}
+	if ((g_env.nb_threads = atoi(speedup)) > 250)
+		return (-1);
+	return (0);
+}
+
+void			print_scan(int scan)
+{
+	static char		known_scan[NB_SCAN][5] = {"SYN", "NULL", "FIN", "XMAS", "ACK", "UDP"};
+	static int		value_scan[NB_SCAN] = {SYN, NUL, FIN, XMS, ACK, UDP};
+
+	for (int i = 0; i < NB_SCAN; i++) {
+//		printf("0x%x & 0x%x == 0x%x\n", scan, value_scan[i], scan & value_scan[i]);
+		if ((scan & value_scan[i]) == value_scan[i])
+			printf("%s\n", known_scan[i]);
+	}
+}
+
+static int		format_scan(char *scan)
+{
+	int				i = 0;
+	bool			found;
+	char			**scan_split;
+	static char		known_scan[NB_SCAN][5] = {"SYN", "NULL", "FIN", "XMAS", "ACK", "UDP"};
+	static int		value_scan[NB_SCAN] = {SYN, NUL, FIN, XMS, ACK, UDP};
+
+	if (!scan)
+		return (0);
+	g_env.scan = 0;
+	scan_split = ft_strsplit(scan, '/');
+	while (scan_split[i]) {
+		found = false;
+		for (int j = 0; j < NB_SCAN; j++) {
+				if (strcmp(scan_split[i], known_scan[j]) == 0) {
+					g_env.scan |= value_scan[j];
+					found = true;
+				}
+		}
+		if (!found)
+			return (display_scan_unknown(scan_split[i]));
+		i++;
+	}
+	return (0);
+}
+
 static int		format_opt(t_pars *data)
 {
+	//{"ports", "ip", "file", "speedup", "scan", "help"};
 	if (format_port(data->port) == -1)
 		return (-1);
 	for (int i = 0; i < g_env.nb_port; i++) {
 		printf("port[%d] = %d\n", i, g_env.port[i]);
 	}
+/*	if (!(inet_aton(data->ip, &g_env.ip)))
+		return (-1);*/
+	if (format_speedup(data->speedup) == -1)
+		return (-1);
+	if (format_scan(data->scan) == -1)
+		return (-1);
+	print_scan(g_env.scan);
 	return (0);
 }
 
@@ -176,7 +243,7 @@ int				parser(int ac, char **av, t_pars *data)
 					printf("value found %s pour %d\n", av[i], opt_off);
 					printf("---------------------------------------------\n\n");
 				}
-				memcpy(addr + opt_off * 8, &av[i], 8);
+				memcpy((void *)(addr + opt_off * 8), &av[i], 8);
 			}
 		}
 	}
