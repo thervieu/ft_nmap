@@ -1,4 +1,4 @@
-#include "../incs/ft_nmap.h"
+#include "ft_nmap.h"
 
 void error_exit(char *err, int code) {
     if (err != NULL) {
@@ -23,11 +23,28 @@ void init_global(void) {
 
 t_env g_env;
 
+void init_global(void) {
+    g_env.min_port = 80;
+    g_env.max_port = 200;
+    g_env.nb_threads = 30; // set to 1 when doing parsing
+
+    g_env.nb_ips = 2; 
+
+    g_env.nb_scans = 6;   
+}
+
+t_env g_env;
+
 int main(int ac, char **av) {
+	t_pars	data;
     if (ac < 2) {
         usage();
         error_exit(NULL, 255);
     }
+	bzero(&data, sizeof(data));
+	//parser returns -1 in case of error, 0 otherwise
+	if (parser(ac, av, &data) == -1)
+		return(0);
     (void)av;
 
     // init mutex(es) (at least one for global, maybe one for send/recv/pcap ?)

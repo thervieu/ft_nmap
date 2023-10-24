@@ -2,8 +2,8 @@ NAME = ft_nmap
 
 SRCS_DIR = ./srcs/
 
-SRCS =	ft_nmap.c \
-		loop.c
+SRCS =	ft_nmap.c parser.c loop.c ft_strsplit.c ft_strsub.c
+		
 
 OBJS_DIR = objs/
 
@@ -13,13 +13,19 @@ OBJS = $(addprefix $(OBJS_DIR), $(OBJ))
 
 FLAGS = -Wall -Wextra -Werror
 
+INC_DIR = ./incs
+INC = ft_nmap.h
+HEAD = $(INC_DIR)/$(INC)
+
 $(OBJS_DIR)%.o : $(SRCS_DIR)%.c
 	@mkdir -p $(OBJS_DIR)
 	@echo "Compiling" $<
-	@gcc $(FLAGS) -lpthread -lpcap -c $< -o $@
+	@gcc $(FLAGS) -I $(INC_DIR) -lpthread -c $< -o $@ #-lpcap 
+
+#$(OBJS): $(HEAD)
 
 $(NAME): $(OBJS)
-	@gcc $(FLAGS) -lpthread -lpcap -o $(NAME) $(OBJS)
+	@gcc $(FLAGS) -I $(INC_DIR) -lpthread -o $(NAME) $(OBJS) #-lpcap 
 	@echo "Exec ft_nmap created !"
 	@echo "usage: ./ft_nmap [equation]"
 
