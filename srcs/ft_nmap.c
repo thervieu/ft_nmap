@@ -11,37 +11,17 @@ void usage(void) {
     printf("usage: ft_nmap [options] ip_to_scan\n");
 }
 
-/*
-    idea of loop function
+void init_global(void) {
+    g_env.min_port = 80;
+    g_env.max_port = 200;
+    g_env.nb_threads = 30; // set to 1 when doing parsing
 
-    socket init
-    gettimeofday(&g_env->tv_start);
-    for loop range through ips/hosts {
-        for loop range through ports {
-            for loop range through scan types {
+    g_env.nb_ips = 2; 
 
-                if g_env->scan_types  {
-                    init scanner_struct
-                    if (can_create_thread() == false) {
-                        wait_for_one_thread(); // possible ? sinon wait_for_all_threads
-                    }
-                    if ((ret = pthread_create(&(g_env->threads[thread_nb], scanner_struct, scanner_func)) != 0){
-                        fprintf( stdout, "Fail %d %d", ret, errno );
-                        exit(ret);
-                    }
-                    thread_nb++;
-                    ite++;
-                }
-                else
-                    ite++;
-            }
-        }
-    }
-    wait_for_all_threads
-    gettimeofday(&g_env->tv_end);
-    print time
+    g_env.nb_scans = 6;   
+}
 
-*/
+t_env g_env;
 
 int main(int ac, char **av) {
     if (ac < 2) {
@@ -49,15 +29,18 @@ int main(int ac, char **av) {
         error_exit(NULL, 255);
     }
     (void)av;
+
     // init mutex(es) (at least one for global, maybe one for send/recv/pcap ?)
+    pthread_mutex_init(&(g_env.launch_thread_m), NULL);
     // init global
+    init_global();
     // Q: que faire quand on a pas de thread (speedup = 0) ? Faire une fonction à part semble plus simple
     // Q: nmap sort les ports dans l'ordre décroissant... Comment faire ça facilement avec la globale ?
     // -> on peut faire un g_env->result_ip[nb_ip]->result_ports[1024 ou taille de max_port - min_port]
-    // parse args
-    // display header
-    // loop (all threads creation/deletion should be done here)
-    // display results
-    // free global
+    // parse_args();
+    // display_header();
+    ip_loop(); // (all threads creation/deletion should be done here)
+    // display_results();
+    // free_global();
     // free mutex(es)
 }

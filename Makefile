@@ -2,7 +2,8 @@ NAME = ft_nmap
 
 SRCS_DIR = ./srcs/
 
-SRCS =	ft_nmap.c
+SRCS =	ft_nmap.c \
+		loop.c
 
 OBJS_DIR = objs/
 
