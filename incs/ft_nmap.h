@@ -21,12 +21,15 @@
 
 //#include <pcap.h>
 
+# include <ifaddrs.h>
 # include <string.h>
+# include <errno.h>
 
 # define NB_OPT 6
 
 # define NB_SCAN 6
 
+// scans
 # define SYN 0x01
 # define NUL 0x02
 # define ACK 0x04
@@ -34,6 +37,16 @@
 # define XMS 0x10
 # define UDP 0x20
 
+// tcp flags
+# define NULL_F 0x00
+# define FIN_F 0x01
+# define SYN_F 0x02
+# define RST_F 0x04
+# define PSH_F 0x08
+# define ACK_F 0x10
+# define URG_F 0x20
+
+# define PACKET_BUFFER_SIZE 64
 
 typedef struct	s_pars {
 	char		*port;
@@ -80,10 +93,9 @@ typedef struct s_env {
     /*
     ** general storage structs for threads and results
     */
-    // timeval *beginning;
-    // timeval *avg_time;
+    int socket_fd;
 
-    int ite_ip_host;
+    int ite_ip;
     int nb_ips;
     int nb_scans;
     int *scan_bit_to_index;
@@ -107,10 +119,10 @@ typedef struct s_scanner {
     int thread_id;
     int port;
     int port_index;
+    int tcp_flags;
     int scan_bit;
     int scan_type;
-    // socket
-    // char *ip_str;
+    char *ip_str;
     // char *buffer;
     // seq
     // ack_seq
@@ -129,5 +141,12 @@ char	*ft_strsub(char const *s, unsigned int start, size_t len);
 
 // loop.c
 void ip_loop(void);
+
+// configure.c
+void configure_socket(void);
+struct ip *configure_ip(char *ip_dst, int scan_type);
+
+// scan.c
+void scan_thread(void *data);
 
 #endif
