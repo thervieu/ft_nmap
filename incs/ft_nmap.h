@@ -56,6 +56,13 @@ typedef struct s_result {
     // char *ip_str;
 }   t_result;
 
+typedef struct in_addr t_addr;
+
+typedef struct	s_network {
+	char		*hostname;
+	t_addr		ip;
+}				t_network;
+
 typedef struct s_env {
     /*
     ** args
@@ -68,7 +75,7 @@ typedef struct s_env {
 	int			nb_port;
 	char		*file;
 	int			scan;
-    //t_list *ip_and_hosts; // can be array ?
+    t_network	 *ip_and_hosts; // can be array ?
     //t_list *scan_types; // can be array ?
 
     /*

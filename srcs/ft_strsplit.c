@@ -6,11 +6,11 @@
 /*   By: rostroh <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/08 10:57:25 by rostroh           #+#    #+#             */
-/*   Updated: 2023/10/24 13:55:10 by rostroh          ###   ########.fr       */
+/*   Updated: 2023/10/24 15:27:10 by rostroh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../incs/ft_nmap.h"
+#include "ft_nmap.h"
 
 static int	lenword(char const *s, char c)
 {

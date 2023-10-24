@@ -1,4 +1,4 @@
-#include "../incs/ft_nmap.h"
+#include "ft_nmap.h"
 
 void error_exit(char *err, int code) {
     if (err != NULL) {

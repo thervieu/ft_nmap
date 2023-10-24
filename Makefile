@@ -10,14 +10,21 @@ OBJ = $(SRCS:.c=.o)
 
 OBJS = $(addprefix $(OBJS_DIR), $(OBJ))
 
-FLAGS = -Wall #-Wextra -Werror
+FLAGS = -Wall -Wextra -Werror
+
+INC_DIR = ./incs
+INC = ft_nmap.h
+HEAD = $(INC_DIR)/$(INC)
 
 $(OBJS_DIR)%.o : $(SRCS_DIR)%.c
 	@mkdir -p $(OBJS_DIR)
 	@echo "Compiling" $<
-	@gcc $(FLAGS) -lpthread -c $< -o $@ #-lpcap 
+	@gcc $(FLAGS) -I $(INC_DIR) -lpthread -c $< -o $@ #-lpcap 
+
+$(OBJS): $(HEAD)
+
 $(NAME): $(OBJS)
-	@gcc $(FLAGS) -lpthread -o $(NAME) $(OBJS) #-lpcap 
+	@gcc $(FLAGS) -I $(INC_DIR) -lpthread -o $(NAME) $(OBJS) #-lpcap 
 	@echo "Exec ft_nmap created !"
 	@echo "usage: ./ft_nmap [equation]"
 

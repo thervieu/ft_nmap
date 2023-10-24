@@ -6,11 +6,11 @@
 /*   By: rostroh <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/05 23:07:40 by rostroh           #+#    #+#             */
-/*   Updated: 2023/10/24 13:54:53 by rostroh          ###   ########.fr       */
+/*   Updated: 2023/10/24 15:27:17 by rostroh          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../incs/ft_nmap.h"
+#include "ft_nmap.h"
 
 char	*ft_strsub(char const *s, unsigned int start, size_t len)
 {

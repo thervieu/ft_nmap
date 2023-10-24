@@ -1,4 +1,4 @@
-#include "../incs/ft_nmap.h"
+#include "ft_nmap.h"
 
 # define DEBUG_PARS 1
 
@@ -155,12 +155,16 @@ static int		format_speedup(char *speedup)
 	if (!speedup)
 		return (0);
 	while (speedup[i]) {
-		if (is_digit(speedup[i]) == 0)
+		if (is_digit(speedup[i]) == 0) {
+			printf("%s isn't a valid parameter for --speedup\n", speedup);
 			return (-1);
+		}
 		i++;
 	}
-	if ((g_env.nb_threads = atoi(speedup)) > 250)
+	if ((g_env.nb_threads = atoi(speedup)) > 250) {
+		printf("%d is too big for speedup (max 250)\n", g_env.nb_threads);
 		return (-1);
+	}
 	return (0);
 }
 
@@ -212,6 +216,8 @@ static int		format_opt(t_pars *data)
 		printf("port[%d] = %d\n", i, g_env.port[i]);
 	}
 /*	if (!(inet_aton(data->ip, &g_env.ip)))
+		return (-1);
+	if (format_file(data->file) == -1)
 		return (-1);*/
 	if (format_speedup(data->speedup) == -1)
 		return (-1);
