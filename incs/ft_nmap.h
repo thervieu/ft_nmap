@@ -64,6 +64,20 @@ typedef struct	s_network {
 	t_addr		ip;
 }				t_network;
 
+typedef struct s_scan_result {
+    bool change_me;
+}   t_scan_result;
+
+typedef struct s_port_result {
+    int port;
+    t_scan_result *scan_results;
+}   t_port_result;
+
+typedef struct s_result {
+    t_port_result *ports_result;
+    // char *ip_str;
+}   t_result;
+
 typedef struct s_env {
     /*
     ** args
@@ -72,10 +86,10 @@ typedef struct s_env {
     int max_port;
     int nb_threads;
 
-	int			*port;
-	int			nb_port;
-	char		*file;
-	int			scan;
+    int			*port;
+    int			nb_port;
+    char		*file;
+    int			scan;
     t_network	 *ip_and_hosts; // can be array ?
     //t_list *scan_types; // can be array ?
 
@@ -119,9 +133,15 @@ typedef struct s_scanner {
 
 extern t_env g_env;
 
+// ft_nmap.c
+void error_exit(char *err, int code);
+
+// parsing
 int			parser(int ac, char **av, t_pars *data);
 char		**ft_strsplit(char const *s, char c);
 char	*ft_strsub(char const *s, unsigned int start, size_t len);
 
+// loop.c
+void ip_loop(void);
 
 #endif
