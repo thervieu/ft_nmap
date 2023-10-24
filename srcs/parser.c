@@ -217,6 +217,7 @@ static char		*read_file(int fd)
 			content[content_sz + i] = buf[i];
 		content_sz += len;
 	}
+	printf("en vie %d\n", content_sz);
 	return (content);
 }
 
@@ -233,6 +234,11 @@ static int		format_file(char *file)
 	}
 	content = read_file(fd);
 	hosts = ft_strsplit(content, '\n');
+	if (!hosts)
+	{
+		printf("%s is empty\n", file);
+		return (-1);
+	}
 	g_env.nb_ips = 0;
 	while (hosts[g_env.nb_ips])
 		g_env.nb_ips++;
