@@ -43,6 +43,18 @@ void usage(void) {
 
 */
 
+void init_global(void) {
+    g_env.min_port = 80;
+    g_env.max_port = 200;
+    g_env.nb_threads = 30; // set to 1 when doing parsing
+
+    g_env.nb_ips = 2; 
+
+    g_env.nb_scans = 6;   
+}
+
+t_env g_env;
+
 int main(int ac, char **av) {
 	t_pars	data;
     if (ac < 2) {

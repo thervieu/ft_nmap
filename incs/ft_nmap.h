@@ -60,6 +60,8 @@ typedef struct s_env {
     int min_port;
     int max_port;
     int nb_threads;
+	int			*port;
+	int			nb_port;
     // t_list *ip_and_hosts; // can be array ?
     // t_list *scan_types; // can be array ?
 
@@ -101,7 +103,7 @@ typedef struct s_scanner {
     // sockaddr_in
 }   t_scanner;
 
-//t_env g_env;
+extern t_env g_env;
 
 int			parser(int ac, char **av, t_pars *data);
 
