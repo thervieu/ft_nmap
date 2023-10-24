@@ -76,34 +76,6 @@ int				parser(int ac, char **av, t_pars *data)
 					printf("---------------------------------------------\n\n");
 				}
 				memcpy(addr + opt_off * 8, &av[i], 8);
-				//*(data + i * 8) = av[i];
-				/*switch (opt_off) {
-					case 1:
-					{
-						data->port = av[i];
-						break ;
-					}
-					case 2:
-					{
-						data->ip = av[i];
-						break ;
-					}
-					case 3:
-					{
-						data->file = av[i];
-						break ;
-					}
-					case 4:
-					{
-						data->speedup = av[i];
-						break ;
-					}
-					case 5:
-					{
-						data->scan = av[i];
-						break ;
-					}
-				}*/
 			}
 		}
 	}
