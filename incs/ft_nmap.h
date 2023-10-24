@@ -43,20 +43,6 @@ typedef struct	s_pars {
 	char		*scan;
 }				t_pars;
 
-typedef struct s_scan_result {
-    bool change_me;
-}   t_scan_result;
-
-typedef struct s_port_result {
-    int port;
-    t_scan_result *scan_results;
-}   t_port_result;
-
-typedef struct s_result {
-    t_port_result *ports_result;
-    // char *ip_str;
-}   t_result;
-
 typedef struct in_addr t_addr;
 
 typedef struct	s_network {
@@ -82,8 +68,6 @@ typedef struct s_env {
     /*
     ** args
     */
-    int min_port;
-    int max_port;
     int nb_threads;
 
     int			*port;
@@ -102,6 +86,7 @@ typedef struct s_env {
     int ite_ip_host;
     int nb_ips;
     int nb_scans;
+    int *scan_bit_to_index;
     pthread_t *scanner_threads;
     bool *threads_availability;
     t_result *results; // array of size len(ip/hosts)
@@ -121,7 +106,8 @@ typedef struct s_env {
 typedef struct s_scanner {
     int thread_id;
     int port;
-    int scan_id;
+    int port_index;
+    int scan_bit;
     int scan_type;
     // socket
     // char *ip_str;

@@ -96,6 +96,9 @@ static int		count_port(char *port_string)
 			return (-1);
 		i++;
 	}
+	if (g_env.nb_port > 1024) {
+		error_exit("too many ports", 1024);
+	}
 	return (0);
 }
 
