@@ -44,13 +44,15 @@ void usage(void) {
 */
 
 int main(int ac, char **av) {
+	t_pars	data;
     if (ac < 2) {
         usage();
         error_exit(NULL, 255);
     }
+	bzero(&data, sizeof(data));
 	//parser returns -1 in case of error, 0 otherwise
-	if (parser(ac, av) == -1)
-		return ;
+	if (parser(ac, av, &data) == -1)
+		return(0);
     (void)av;
     // init mutex(es) (at least one for global, maybe one for send/recv/pcap ?)
     // init global
