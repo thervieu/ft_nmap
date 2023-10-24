@@ -15,6 +15,7 @@
 # include <stdlib.h>
 # include <float.h>
 # include <math.h>
+# include <fcntl.h>
 
 #include <pthread.h>
 

@@ -21,7 +21,7 @@ $(OBJS_DIR)%.o : $(SRCS_DIR)%.c
 	@echo "Compiling" $<
 	@gcc $(FLAGS) -I $(INC_DIR) -lpthread -c $< -o $@ #-lpcap 
 
-$(OBJS): $(HEAD)
+#$(OBJS): $(HEAD)
 
 $(NAME): $(OBJS)
 	@gcc $(FLAGS) -I $(INC_DIR) -lpthread -o $(NAME) $(OBJS) #-lpcap 

@@ -1,7 +1,5 @@
 #include "ft_nmap.h"
 
-# define DEBUG_PARS 1
-
 static int		display_help(char *prog_name)
 {
 	printf("Help Screen\n\
@@ -174,7 +172,6 @@ void			print_scan(int scan)
 	static int		value_scan[NB_SCAN] = {SYN, NUL, FIN, XMS, ACK, UDP};
 
 	for (int i = 0; i < NB_SCAN; i++) {
-//		printf("0x%x & 0x%x == 0x%x\n", scan, value_scan[i], scan & value_scan[i]);
 		if ((scan & value_scan[i]) == value_scan[i])
 			printf("%s\n", known_scan[i]);
 	}
@@ -207,23 +204,80 @@ static int		format_scan(char *scan)
 	return (0);
 }
 
+static char		*read_file(int fd)
+{
+	int		len;
+	int		content_sz = 0;
+	char	buf[512];
+	char	*content = NULL;
+
+	while ((len = read(fd, &buf, 512)) > 0) {
+		content = realloc(content, content_sz + len);
+		for (int i = 0; i < len; i++)
+			content[content_sz + i] = buf[i];
+		content_sz += len;
+	}
+	return (content);
+}
+
+static int		format_file(char *file)
+{
+	int		fd;
+	char	*content;
+	char	**hosts;
+
+	if ((fd = open(file, O_RDONLY)) < 0)
+	{
+		printf("An error occured while openning %s\n", file);
+		return (-1);
+	}
+	content = read_file(fd);
+	hosts = ft_strsplit(content, '\n');
+	g_env.nb_ips = 0;
+	while (hosts[g_env.nb_ips])
+		g_env.nb_ips++;
+	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
+	printf("\n");
+	for (int i = 0; i < g_env.nb_ips; i++)
+		g_env.ip_and_hosts[i].hostname = hosts[i];
+	return (0);
+}
+
+static int		format_ip(char *ip)
+{
+	g_env.nb_ips = 1;
+	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
+	if (inet_aton(ip, &g_env.ip_and_hosts[0].ip) == 0)
+	{
+		printf("Not a valid ip: %s\n", ip);
+		return (-1);
+	}
+	return (0);
+}
+
 static int		format_opt(t_pars *data)
 {
 	//{"ports", "ip", "file", "speedup", "scan", "help"};
-	if (format_port(data->port) == -1)
+	if (data->port && format_port(data->port) == -1)
 		return (-1);
 	for (int i = 0; i < g_env.nb_port; i++) {
 		printf("port[%d] = %d\n", i, g_env.port[i]);
 	}
-/*	if (!(inet_aton(data->ip, &g_env.ip)))
+	if (data->ip && format_ip(data->ip) == -1)
 		return (-1);
-	if (format_file(data->file) == -1)
-		return (-1);*/
-	if (format_speedup(data->speedup) == -1)
+	if (data->file && format_file(data->file) == -1)
 		return (-1);
-	if (format_scan(data->scan) == -1)
+	if (data->speedup && format_speedup(data->speedup) == -1)
 		return (-1);
-	print_scan(g_env.scan);
+	if (data->scan && format_scan(data->scan) == -1)
+		return (-1);
+	if (data->scan)
+		print_scan(g_env.scan);
+	if (data->file) {
+		for (int i = 0; i < g_env.nb_ips; i++) {
+			printf("%s\n", g_env.ip_and_hosts[i].hostname);
+		}
+	}
 	return (0);
 }
 
@@ -233,8 +287,6 @@ int				parser(int ac, char **av, t_pars *data)
 	long		addr = (long)data;
 
 	for (int i = 1; i < ac; i++) {
-		if (DEBUG_PARS)
-			printf("\nworking on %s\n",  av[i]);
 		if (strncmp(av[i], "--", 2) == 0) {
 			//is_valid_opt returns -1 in case the opt doesn't exist
 			if ((opt_off = is_valid_opt(av[i])) == -1)
@@ -245,10 +297,6 @@ int				parser(int ac, char **av, t_pars *data)
 				if (i + 1 == ac)
 					return (display_no_val(av[0], av[i]));
 				i++;
-				if (DEBUG_PARS) {
-					printf("value found %s pour %d\n", av[i], opt_off);
-					printf("---------------------------------------------\n\n");
-				}
 				memcpy((void *)(addr + opt_off * 8), &av[i], 8);
 			}
 		}
