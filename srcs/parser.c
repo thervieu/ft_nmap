@@ -220,7 +220,6 @@ static char		*read_file(int fd)
 			content[content_sz + i] = buf[i];
 		content_sz += len;
 	}
-	printf("en vie %d\n", content_sz);
 	return (content);
 }
 
@@ -248,7 +247,10 @@ static int		format_file(char *file)
 	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
 	printf("\n");
 	for (int i = 0; i < g_env.nb_ips; i++)
+	{
 		g_env.ip_and_hosts[i].hostname = hosts[i];
+		get_ip_addr(hosts[i], i);
+	}
 	return (0);
 }
 
@@ -262,6 +264,7 @@ static int		format_ip(char *ip)
 		return (-1);
 	}
 	g_env.ip_and_hosts[0].hostname = ip;
+	get_ip_addr(ip, 0);
 	return (0);
 }
 
@@ -283,10 +286,8 @@ static int		format_opt(t_pars *data)
 		return (-1);
 	if (data->scan)
 		print_scan(g_env.scan);
-	if (data->file) {
-		for (int i = 0; i < g_env.nb_ips; i++) {
-			printf("%s\n", g_env.ip_and_hosts[i].hostname);
-		}
+	for (int i = 0; i < g_env.nb_ips; i++) {
+		printf("Printing %s\n\tcanon = %s\n\tinfo = %s\n\taddr = %s\n", g_env.ip_and_hosts[i].hostname, g_env.ip_and_hosts[i].canonname, g_env.ip_and_hosts[i].nameinfo, inet_ntoa(g_env.ip_and_hosts[i].ip));
 	}
 	return (0);
 }
@@ -302,7 +303,7 @@ int				parser(int ac, char **av, t_pars *data)
 			if ((opt_off = is_valid_opt(av[i])) == -1)
 				return (display_unknown(av[0], av[i]));
 			if (opt_off == 5)
-				return (display_help(av[0]));
+					return (display_help(av[0]));
 			else {
 				if (i + 1 == ac)
 					return (display_no_val(av[0], av[i]));

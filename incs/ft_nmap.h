@@ -60,6 +60,8 @@ typedef struct in_addr t_addr;
 
 typedef struct	s_network {
 	char		*hostname;
+	char		*nameinfo;
+	char		*canonname;
 	t_addr		ip;
 }				t_network;
 
@@ -133,6 +135,7 @@ extern t_env g_env;
 
 // ft_nmap.c
 void error_exit(char *err, int code);
+char	*ft_strdup(const char *str);
 
 // parsing
 int			parser(int ac, char **av, t_pars *data);
@@ -148,5 +151,8 @@ struct ip *configure_ip(char *ip_dst, int scan_type);
 
 // scan.c
 void scan_thread(void *data);
+
+//ip.c
+struct sockaddr_in			get_ip_addr(char *host, int ip_idx);
 
 #endif

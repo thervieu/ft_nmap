@@ -8,7 +8,8 @@ SRCS =	ft_nmap.c		\
 		ft_strsub.c		\
 		loop.c			\
 		configure.c		\
-		scan.c
+		scan.c \
+		ip.c
 
 OBJS_DIR = objs/
 
@@ -25,12 +26,12 @@ HEAD = $(INC_DIR)/$(INC)
 $(OBJS_DIR)%.o : $(SRCS_DIR)%.c
 	@mkdir -p $(OBJS_DIR)
 	@echo "Compiling" $<
-	@gcc $(FLAGS) -I $(INC_DIR) -lpthread -c $< -o $@ #-lpcap 
+	@gcc $(FLAGS) -I $(INC_DIR) -pthread -c $< -o $@ #-lpcap 
 
 #$(OBJS): $(HEAD)
 
 $(NAME): $(OBJS)
-	@gcc $(FLAGS) -I $(INC_DIR) -lpthread -o $(NAME) $(OBJS) #-lpcap 
+	@gcc $(FLAGS) -I $(INC_DIR) -pthread -o $(NAME) $(OBJS) #-lpcap 
 	@echo "Exec ft_nmap created !"
 	@echo "usage: ./ft_nmap [equation]"
 

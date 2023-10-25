@@ -25,7 +25,7 @@ void init_global(void) {
 
     g_env.nb_threads = 1; // set to 1 when doing parsing
 
-    g_env.nb_ips = 1;
+    g_env.nb_ips = 0;
 
     g_env.scan = 0b111111;
 }
