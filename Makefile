@@ -8,7 +8,8 @@ SRCS =	ft_nmap.c		\
 		ft_strsub.c		\
 		loop.c			\
 		configure.c		\
-		scan.c
+		scan.c \
+		ip.c
 
 OBJS_DIR = objs/
 
