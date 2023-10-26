@@ -84,6 +84,26 @@ void init_structs_global(void) {
 
 t_env g_env;
 
+static void		display_ips(void)
+{
+	for (int i = 0; i < g_env.nb_ips; i++) {
+		printf("%s ", inet_ntoa(g_env.ip_and_hosts[i].ip));
+	}
+	printf("\n");
+}
+
+void			display_nmap(void) {
+	printf("Scan Configurations\n\
+Target Ip-Address : ");
+	display_ips();
+	printf("No of Ports to scan : %d\n\
+Scans to be performed : ", g_env.nb_ips);
+	print_scan(g_env.scan);
+	printf("\nNo of threads : %d\n\
+Scanning..\n\
+........\n", g_env.nb_threads);
+}
+
 int main(int ac, char **av) {
     if (getuid() != 0) {
         error_exit("Operation not permitted", 1);
@@ -104,6 +124,8 @@ int main(int ac, char **av) {
     // init mutex(es) (at least one for global, maybe one for send/recv/pcap ?)
     pthread_mutex_init(&(g_env.launch_thread_m), NULL);
     init_structs_global();
+	// Q: peut etre le bouger dans ip loop ?
+	display_nmap();
     // Q: que faire quand on a pas de thread (speedup = 0) ? Faire une fonction à part semble plus simple
     // Q: nmap sort les ports dans l'ordre décroissant... Comment faire ça facilement avec la globale ?
     // -> on peut faire un g_env->result_ip[nb_ip]->result_ports[1024 ou taille de max_port - min_port]

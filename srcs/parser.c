@@ -176,7 +176,7 @@ void			print_scan(int scan)
 
 	for (int i = 0; i < NB_SCAN; i++) {
 		if ((scan & value_scan[i]) == value_scan[i])
-			printf("%s\n", known_scan[i]);
+			printf("%s ", known_scan[i]);
 	}
 }
 
