@@ -17,7 +17,7 @@ OBJ = $(SRCS:.c=.o)
 
 OBJS = $(addprefix $(OBJS_DIR), $(OBJ))
 
-FLAGS = -Wall -Wextra -Werror
+FLAGS = -Wall -Wextra -Werror -Wundef
 
 INC_DIR = ./incs
 INC = ft_nmap.h

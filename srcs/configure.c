@@ -95,3 +95,64 @@ struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type) {
 
     return ip;
 }
+
+unsigned short	cksum(unsigned short *addr, int len)
+{
+	int				nleft;
+	int				sum;
+	unsigned short	*w;
+	unsigned short	ans;
+
+	nleft = len;
+	w = addr;
+	sum = 0;
+	ans = 0;
+	while (nleft > 1)
+	{
+		sum += *w++;
+		nleft -= 2;
+	}
+	if (nleft == 1)
+	{
+		*(unsigned char *)(&ans) = *(unsigned char *)w;
+		sum += ans;
+	}
+	sum = (sum >> 16) + (sum & 0xffff);
+	sum += (sum >> 16);
+	ans = ~sum;
+	return (ans);
+}
+
+struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
+    struct iphdr *ip = (struct iphdr *)buffer;
+    
+    struct tcphdr *tcp = (struct tcphdr *)(buffer + ip->ihl*4);
+    // some options were not verified
+    // seq, ack seq, doff, window, urg_ptr, check
+    tcp->source = htons(g_env.src_port);
+    tcp->dest = htons(dst_port);
+    tcp->seq = htonl(123);
+    tcp->ack_seq = htonl(456);
+    tcp->doff = 5;
+    tcp->fin = tcp_flags&FIN_F;
+    tcp->syn = tcp_flags&SYN_F;
+    tcp->rst = tcp_flags&RST_F;
+    tcp->psh = tcp_flags&PSH_F;
+    tcp->ack = tcp_flags&ACK_F;
+    tcp->urg = tcp_flags&URG_F;
+    tcp->window = htons(8192);
+    tcp->urg_ptr = 0;
+    tcp->check = cksum((unsigned short *)ip, ip->ihl); // htons? will likely need sub function because TPC_LEN != UDP_LEN
+    return tcp;
+}
+
+struct udphdr* configure_udp_header(char *buffer, int dst_port) {
+    struct iphdr *ip = (struct iphdr *)buffer;
+    
+    struct udphdr *udp = (struct udphdr *)(buffer + ip->ihl*4);
+    udp->source = htons(g_env.src_port);
+    udp->dest = htons(dst_port);
+    udp->len = htons(sizeof(struct udphdr));
+    udp->check = cksum((unsigned short *)ip, ip->ihl); // htons? will likely need sub function because TPC_LEN != UDP_LEN
+    return udp;
+}

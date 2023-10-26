@@ -97,6 +97,7 @@ typedef struct s_env {
     /*
     ** general storage structs for threads and results
     */
+    int src_port;
     int socket_fd;
 
     int ite_ip;
@@ -152,6 +153,8 @@ void ip_loop(void);
 // configure.c
 void configure_socket(void);
 struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type);
+struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags);
+struct udphdr* configure_udp_header(char *buffer, int dst_port);
 
 // scan.c
 void scan_thread(void *data);

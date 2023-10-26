@@ -29,6 +29,7 @@ int get_interface(void) {
 }
 
 void init_global(void) {
+    g_env.src_port = 80;
     g_env.nb_port = 1024;
     g_env.port = (int*)malloc(sizeof(int)*g_env.nb_port);
     if (g_env.port == NULL) {

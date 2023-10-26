@@ -38,8 +38,8 @@ void scan_thread(void *data) {
     t_scanner scanner = *(t_scanner *)data;
 
     struct ip *ip;
-    // struct tcphdr *tcp;
-    // struct udphdr *udp;
+    struct tcphdr *tcp;
+    struct udphdr *udp;
 
     char *buffer = (char*)malloc(PACKET_BUFFER_SIZE);
     if (buffer==NULL) {
@@ -50,13 +50,15 @@ void scan_thread(void *data) {
 
 
     ip = configure_ip(buffer, scanner.ip_str, scanner.scan_type);
+    if (scanner.scan_type^UDP) {
+        tcp = configure_tcp_header(buffer, scanner.port, scanner.tcp_flags);
+    }
+    else {
+        udp = configure_udp_header(buffer, scanner.port);
+    }
     (void)ip;
-    // if (scanner.scan_type^UDP) {
-    //     tcp = configure_tcp(buffer, );
-    // }
-    // else {
-    //     udp = configure_udp();
-    // }
+    (void)tcp;
+    (void)udp;
 
     // scan()
     g_env.results[g_env.ite_ip].ports_result[scanner.port_index].scan_results[g_env.scan_bit_to_index[scanner.scan_bit]].change_me = true;
