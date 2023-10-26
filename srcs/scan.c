@@ -41,11 +41,18 @@ void scan_thread(void *data) {
     // struct tcphdr *tcp;
     // struct udphdr *udp;
 
+    char *buffer = (char*)malloc(PACKET_BUFFER_SIZE);
+    if (buffer==NULL) {
+        error_exit("malloc buffer configure_ip failed", 1);
+    }
+    
+    bzero(buffer, PACKET_BUFFER_SIZE);
 
-    ip = configure_ip(scanner.ip_str, scanner.scan_type);
+
+    ip = configure_ip(buffer, scanner.ip_str, scanner.scan_type);
     (void)ip;
     // if (scanner.scan_type^UDP) {
-    //     tcp = configure_tcp();
+    //     tcp = configure_tcp(buffer, );
     // }
     // else {
     //     udp = configure_udp();

@@ -49,7 +49,7 @@ char	*ft_strdup(const char *src)
 	return (dest);
 }
 
-char *get_my_interface(void) {
+char *get_working_interface(void) {
 	struct ifaddrs *ifap;
 	struct ifaddrs *ifa;
 	char *addr;
@@ -60,7 +60,7 @@ char *get_my_interface(void) {
 	ifa = ifap;
 	while (ifa->ifa_next != NULL)
 	{
-		if (ifa->ifa_addr->sa_family == AF_INET)
+		if (ifa->ifa_addr->sa_family == AF_INET && ft_strcmp(ifa->ifa_name, g_env.device) == 0)
 		{
 			addr = ft_strdup(inet_ntoa(((struct sockaddr_in*)ifa->ifa_addr)->sin_addr));
 			break;
@@ -74,28 +74,21 @@ char *get_my_interface(void) {
 	return (addr);
 }
 
-struct ip *configure_ip(char *ip_dst, int scan_type) {
-    char *buffer = (char*)malloc(PACKET_BUFFER_SIZE);
-    if (buffer==NULL) {
-        error_exit("malloc buffer configure_ip failed", 1);
-    }
-    
-    bzero(buffer, PACKET_BUFFER_SIZE);
-
+struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type) {
     struct ip *ip;
     ip = (struct ip*)buffer;
 
     ip->ip_v = 4;
     ip->ip_hl = 5; // idk
     ip->ip_tos = 0;
-    ip->ip_len = htons(sizeof(buffer)); // may depend on UDP vs TCP
+    ip->ip_len = sizeof(struct ip) + (scan_type^UDP) ? sizeof(struct tcphdr) : sizeof(struct udphdr);
     ip->ip_id = 0;
     ip->ip_off = 0;
     ip->ip_ttl = 64; // option ttl
     ip->ip_p = (scan_type^UDP) ? IPPROTO_TCP : IPPROTO_UDP;
     ip->ip_sum = 0;
 
-    char *interface = get_my_interface();
+    char *interface = get_working_interface();
     inet_pton(AF_INET, interface, &(ip->ip_src.s_addr));
     inet_pton(AF_INET, ip_dst, &(ip->ip_dst.s_addr));
     free(interface);

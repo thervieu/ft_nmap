@@ -8,6 +8,8 @@
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netinet/ip.h>
+# include <netinet/tcp.h>
+# include <netinet/udp.h>
 # include <netinet/ip_icmp.h>
 # include <netdb.h>
 # include <sys/time.h>
@@ -17,9 +19,9 @@
 # include <math.h>
 # include <fcntl.h>
 
-#include <pthread.h>
+# include <pthread.h>
 
-//#include <pcap.h>
+# include <pcap/pcap.h>
 
 # include <ifaddrs.h>
 # include <string.h>
@@ -101,6 +103,7 @@ typedef struct s_env {
     int nb_ips;
     int nb_scans;
     int *scan_bit_to_index;
+    char *device;
     pthread_t *scanner_threads;
     bool *threads_availability;
     t_result *results; // array of size len(ip/hosts)
@@ -148,7 +151,7 @@ void ip_loop(void);
 
 // configure.c
 void configure_socket(void);
-struct ip *configure_ip(char *ip_dst, int scan_type);
+struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type);
 
 // scan.c
 void scan_thread(void *data);
