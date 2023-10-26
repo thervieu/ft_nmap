@@ -1,6 +1,6 @@
 #include "ft_nmap.h"
 
-static struct sockaddr_in	lookup_host(char *host, int ip_idx)
+static int		lookup_host(char *host, int ip_idx)
 {
 	char			name[255];
 	struct addrinfo		*res;
@@ -15,7 +15,7 @@ static struct sockaddr_in	lookup_host(char *host, int ip_idx)
 	if (getaddrinfo(host, NULL, &hints, &res) != 0)
 	{
 		printf("./ft_nmap: %s: No address associated with hostname\n", host);
-		return (dst);
+		return (-1);
 	}
 	dst = (*(struct sockaddr_in *)res->ai_addr);
 	g_env.ip_and_hosts[ip_idx].ip = dst.sin_addr;
@@ -29,10 +29,10 @@ static struct sockaddr_in	lookup_host(char *host, int ip_idx)
 		free(to_free->ai_canonname);
 		free(to_free);
 	}
-	return (dst);
+	return (0);
 }
 
-struct sockaddr_in			get_ip_addr(char *host, int ip_idx)
+int				get_ip_addr(char *host, int ip_idx)
 {
 	struct in_addr		addr;
 
