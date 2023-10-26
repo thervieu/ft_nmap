@@ -11,7 +11,25 @@ void usage(void) {
     printf("usage: ft_nmap [options] ip_to_scan\n");
 }
 
+int get_interface(void) {
+    char errbuf[PCAP_ERRBUF_SIZE];  // Error buffer
+    pcap_if_t *alldevs;
+
+    // Retrieve the list of available network interfaces
+    if (pcap_findalldevs(&alldevs, errbuf) == -1) {
+        fprintf(stderr, "Error finding network devices: %s\n", errbuf);
+        return 1;
+    }
+    g_env.device = ft_strdup(alldevs->name);
+
+    // Free the list of network devices
+    pcap_freealldevs(alldevs);
+
+    return 0;
+}
+
 void init_global(void) {
+    g_env.src_port = 80;
     g_env.nb_port = 1024;
     g_env.port = (int*)malloc(sizeof(int)*g_env.nb_port);
     if (g_env.port == NULL) {
@@ -28,6 +46,9 @@ void init_global(void) {
     g_env.nb_ips = 0;
 
     g_env.scan = 0b111111;
+    if (get_interface() == 1) {
+        error_exit("Could not find interface to open for pcap", 1);
+    }
 }
 
 

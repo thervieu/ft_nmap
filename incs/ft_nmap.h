@@ -8,6 +8,8 @@
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netinet/ip.h>
+# include <netinet/tcp.h>
+# include <netinet/udp.h>
 # include <netinet/ip_icmp.h>
 # include <netdb.h>
 # include <sys/time.h>
@@ -17,9 +19,9 @@
 # include <math.h>
 # include <fcntl.h>
 
-#include <pthread.h>
+# include <pthread.h>
 
-//#include <pcap.h>
+# include <pcap/pcap.h>
 
 # include <ifaddrs.h>
 # include <string.h>
@@ -95,12 +97,14 @@ typedef struct s_env {
     /*
     ** general storage structs for threads and results
     */
+    int src_port;
     int socket_fd;
 
     int ite_ip;
     int nb_ips;
     int nb_scans;
     int *scan_bit_to_index;
+    char *device;
     pthread_t *scanner_threads;
     bool *threads_availability;
     t_result *results; // array of size len(ip/hosts)
@@ -148,7 +152,9 @@ void ip_loop(void);
 
 // configure.c
 void configure_socket(void);
-struct ip *configure_ip(char *ip_dst, int scan_type);
+struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type);
+struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags);
+struct udphdr* configure_udp_header(char *buffer, int dst_port);
 
 // scan.c
 void scan_thread(void *data);
