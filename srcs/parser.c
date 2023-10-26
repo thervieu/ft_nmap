@@ -258,13 +258,9 @@ static int		format_ip(char *ip)
 {
 	g_env.nb_ips = 1;
 	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
-	if (inet_aton(ip, &g_env.ip_and_hosts[0].ip) == 0)
-	{
-		printf("Not a valid ip: %s\n", ip);
+	if (get_ip_addr(ip, 0) == -1)
 		return (-1);
-	}
 	g_env.ip_and_hosts[0].hostname = ip;
-	get_ip_addr(ip, 0);
 	return (0);
 }
 
@@ -273,9 +269,6 @@ static int		format_opt(t_pars *data)
 	//{"ports", "ip", "file", "speedup", "scan", "help"};
 	if (data->port && format_port(data->port) == -1)
 		return (-1);
-	// for (int i = 0; i < g_env.nb_port; i++) {
-	// 	printf("port[%d] = %d\n", i, g_env.port[i]);
-	// }
 	if (data->ip && format_ip(data->ip) == -1)
 		return (-1);
 	if (data->file && format_file(data->file) == -1)
@@ -313,6 +306,4 @@ int				parser(int ac, char **av, t_pars *data)
 		}
 	}
 	return (format_opt(data));
-	print_parser(data);
-	return (0);
 }
