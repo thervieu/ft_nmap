@@ -154,6 +154,6 @@ struct ip *configure_ip(char *ip_dst, int scan_type);
 void scan_thread(void *data);
 
 //ip.c
-int		get_ip_addr(char *host, int ip_idx);
+int			get_ip_addr(char *host, int ip_idx);
 
 #endif
