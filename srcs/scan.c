@@ -45,7 +45,7 @@ void scan(char *buf, t_scanner scanner, struct ip *ip) {
 	// sin.dest_addr = AF_INET;
 
     printf("thread %d: port %d: scan type %d: sendto %d\n", scanner.thread_id, scanner.port, scanner.scan_type, ip->ip_len);
-    int ret_sendto = sendto(g_env.socket_fd, buf, ip->ip_len, 0, &sin, sizeof(struct sockaddr));
+    int ret_sendto = sendto(g_env.socket_fd, buf, ip->ip_len, 0, (struct sockaddr *)&g_env.ip_and_hosts[g_env.ite_ip].dst_addr/*&sin*/, sizeof(struct sockaddr_in));
     printf("thread %d: ret sendto = |%d|\n", scanner.thread_id, ret_sendto);
     if (ret_sendto < 0)
         printf("errno: %s\n", strerror(errno));

@@ -65,6 +65,7 @@ typedef struct	s_network {
 	char		*nameinfo;
 	char		*canonname;
 	t_addr		ip;
+	struct sockaddr_in	dst_addr;
 }				t_network;
 
 typedef struct s_scan_result {
