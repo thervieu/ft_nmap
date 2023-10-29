@@ -1,20 +1,15 @@
 #include "../incs/ft_nmap.h"
 
-void configure_socket(int port_id) {
-    if ((g_env.socket_fd = socket(AF_INET, SOCK_RAW, 0)) < 0) {
+void configure_socket(void) {
+    if ((g_env.socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
         printf("%d %s\n", g_env.socket_fd, strerror(errno));
         error_exit("error: creating socket", 1);
     }
     int hincl = 1;
     if (setsockopt(g_env.socket_fd, IPPROTO_IP, IP_HDRINCL, &hincl, sizeof(hincl)) < 0) {
+        printf("%d %s\n", g_env.socket_fd, strerror(errno));
         error_exit("error: setsockopt", 1);
     }
-	sockaddr_in sin; 
-
-	sin.sin_family = AF_INET;
-	sin.sin_port = htons(port_id);
-	sin.sin_addr = g_env.ip_and_hosts[g_env.ite_ip].ip;
-	bind(g_env.socket_fd, (struct sockaddr *)&sin, sizeof(sin));
 }
 
 int	ft_strcmp(const char *s1, const char *s2)
@@ -55,7 +50,7 @@ char	*ft_strdup(const char *src)
 	return (dest);
 }
 
-char *get_working_interface(void) {
+char *get_working_interface_ip(void) {
 	struct ifaddrs *ifap;
 	struct ifaddrs *ifa;
 	char *addr;
@@ -80,24 +75,35 @@ char *get_working_interface(void) {
 	return (addr);
 }
 
-struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type) {
+struct ip *configure_ip(char *buffer, int scan_type) {
     struct ip *ip;
     ip = (struct ip*)buffer;
 
     ip->ip_v = 4;
     ip->ip_hl = 5; // idk
     ip->ip_tos = 0;
-    ip->ip_len = sizeof(struct ip) + (scan_type^UDP) ? sizeof(struct tcphdr) : sizeof(struct udphdr);
-    ip->ip_id = 0;
+    ip->ip_len = sizeof(struct ip) + ((scan_type^UDP) ? sizeof(struct tcphdr) : sizeof(struct udphdr));
+	ip->ip_id = 0;
     ip->ip_off = 0;
     ip->ip_ttl = 64; // option ttl
     ip->ip_p = (scan_type^UDP) ? IPPROTO_TCP : IPPROTO_UDP;
     ip->ip_sum = 0;
 
-    char *interface = get_working_interface();
+    char *interface = get_working_interface_ip();
 
-    inet_pton(AF_INET, interface, &(ip->ip_src.s_addr));
-    inet_pton(AF_INET, ip_dst, &(ip->ip_dst.s_addr));
+    int ret = inet_pton(AF_INET, interface, &(ip->ip_src.s_addr));
+	if (ret != 1) {
+		printf("%d: errno: %s\n", ret, strerror(errno));
+		error_exit("inet pton interface src failed", 3);
+	}
+    char *dst_ip_str = inet_ntoa(g_env.ip_and_hosts[g_env.ite_ip].ip);
+	printf("dst_ip_str = %s\n", dst_ip_str);
+    ret = inet_pton(AF_INET, dst_ip_str, &(ip->ip_dst.s_addr));
+	if (ret != 1) {
+		printf("%d: errno: %s\n", ret, strerror(errno));
+		error_exit("inet pton interface src failed", 3);
+	}
+
     free(interface);
 
     return ip;
@@ -132,7 +138,7 @@ unsigned short	cksum(unsigned short *addr, int len)
 
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
     struct iphdr *ip = (struct iphdr *)buffer;
-    
+    printf("ip->ihl %d port src %d port dest %d \n", ip->ihl, g_env.src_port, dst_port);
     struct tcphdr *tcp = (struct tcphdr *)(buffer + ip->ihl*4);
     // some options were not verified
     // seq, ack seq, doff, window, urg_ptr, check

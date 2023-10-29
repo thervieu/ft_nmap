@@ -111,6 +111,7 @@ typedef struct s_env {
     // -> will have an array of result_ports
     // -> result_ports will have an array / enum for each scan
     pthread_mutex_t launch_thread_m;
+    pthread_mutex_t pcap_compile_m;
 
 
     /*
@@ -152,11 +153,11 @@ void	print_scan(int scan);
 void ip_loop(void);
 
 // configure.c
-void configure_socket(int port_id);
-struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type);
+void configure_socket(void);
+struct ip *configure_ip(char *buffer, int scan_type);
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags);
 struct udphdr* configure_udp_header(char *buffer, int dst_port);
-char *get_working_interface(void);
+char *get_working_interface_ip(void);
 
 // scan.c
 void scan_thread(void *data);

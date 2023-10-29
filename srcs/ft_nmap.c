@@ -144,6 +144,7 @@ int main(int ac, char **av) {
 
     // init mutex(es) (at least one for global, maybe one for send/recv/pcap ?)
     pthread_mutex_init(&(g_env.launch_thread_m), NULL);
+    pthread_mutex_init(&(g_env.pcap_compile_m), NULL);
     init_structs_global();
 	// Q: peut etre le bouger dans ip loop ?
 	display_nmap();
@@ -155,5 +156,4 @@ int main(int ac, char **av) {
     ip_loop(); // (all threads creation/deletion should be done here)
     // display_results();
     // free_global();
-    // free mutex(es)
 }
