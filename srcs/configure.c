@@ -1,7 +1,7 @@
 #include "../incs/ft_nmap.h"
 
 void configure_socket(void) {
-    if ((g_env.socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) < 0) {
+    if ((g_env.socket_fd = socket(AF_INET, SOCK_RAW, 0)) < 0) {
         printf("%d %s\n", g_env.socket_fd, strerror(errno));
         error_exit("error: creating socket", 1);
     }
@@ -9,6 +9,9 @@ void configure_socket(void) {
     if (setsockopt(g_env.socket_fd, IPPROTO_IP, IP_HDRINCL, &hincl, sizeof(hincl)) < 0) {
         error_exit("error: setsockopt", 1);
     }
+	// sockaddr_in sin;
+	// sin.
+	// if (bind(g_env.socket_fd, ))
 }
 
 int	ft_strcmp(const char *s1, const char *s2)
@@ -89,6 +92,7 @@ struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type) {
     ip->ip_sum = 0;
 
     char *interface = get_working_interface();
+
     inet_pton(AF_INET, interface, &(ip->ip_src.s_addr));
     inet_pton(AF_INET, ip_dst, &(ip->ip_dst.s_addr));
     free(interface);

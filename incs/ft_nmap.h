@@ -129,6 +129,7 @@ typedef struct s_scanner {
     int scan_bit;
     int scan_type;
     char *ip_str;
+    char *filter_exp;
     // char *buffer;
     // seq
     // ack_seq
@@ -155,6 +156,7 @@ void configure_socket(void);
 struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type);
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags);
 struct udphdr* configure_udp_header(char *buffer, int dst_port);
+char *get_working_interface(void);
 
 // scan.c
 void scan_thread(void *data);
