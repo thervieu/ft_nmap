@@ -159,6 +159,7 @@ void scan_loop(int port_index) {
 void ports_loop(void) {
     int i = 0;
     while (i < g_env.nb_port) {
+		configure_socket(i);
         printf("port loop %d %d\n", i, g_env.port[i]);
         scan_loop(i);
         i++;
@@ -182,7 +183,6 @@ void wait_for_all_threads(void) {
 void ip_loop(void) {
     // gettimeofday();
     
-    configure_socket();
     // for loop on ip/hosts
     g_env.ite_ip = 0;  
     while (g_env.ite_ip < g_env.nb_ips) {

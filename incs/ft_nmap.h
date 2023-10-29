@@ -152,7 +152,7 @@ void	print_scan(int scan);
 void ip_loop(void);
 
 // configure.c
-void configure_socket(void);
+void configure_socket(int port_id);
 struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type);
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags);
 struct udphdr* configure_udp_header(char *buffer, int dst_port);

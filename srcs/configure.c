@@ -1,6 +1,6 @@
 #include "../incs/ft_nmap.h"
 
-void configure_socket(void) {
+void configure_socket(int port_id) {
     if ((g_env.socket_fd = socket(AF_INET, SOCK_RAW, 0)) < 0) {
         printf("%d %s\n", g_env.socket_fd, strerror(errno));
         error_exit("error: creating socket", 1);
@@ -9,9 +9,12 @@ void configure_socket(void) {
     if (setsockopt(g_env.socket_fd, IPPROTO_IP, IP_HDRINCL, &hincl, sizeof(hincl)) < 0) {
         error_exit("error: setsockopt", 1);
     }
-	// sockaddr_in sin;
-	// sin.
-	// if (bind(g_env.socket_fd, ))
+	sockaddr_in sin; 
+
+	sin.sin_family = AF_INET;
+	sin.sin_port = htons(port_id);
+	sin.sin_addr = g_env.ip_and_hosts[g_env.ite_ip].ip;
+	bind(g_env.socket_fd, (struct sockaddr *)&sin, sizeof(sin));
 }
 
 int	ft_strcmp(const char *s1, const char *s2)
