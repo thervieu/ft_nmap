@@ -137,11 +137,14 @@ struct ip *configure_ip(char *buffer, int scan_type) {
     return ip;
 }
 
-// unsigned short dynamic_cksum(struct ip *ip) {
 
-
-// 	return cksum(buf, len_word);
-// }
+struct pseudo_header {
+	uint32_t source;
+	uint32_t dest;
+	uint8_t reserved;
+	uint8_t protocol;
+	uint16_t len;
+};
 
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
     struct ip *ip = (struct ip *)buffer;
@@ -162,7 +165,20 @@ struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
     tcp->urg = tcp_flags&URG_F;
     tcp->window = htons(8192);
     tcp->urg_ptr = 0;
-    tcp->check = cksum((unsigned short*)tcp, sizeof(struct tcphdr));
+
+	struct pseudo_header pseudo;
+	pseudo.source = ip->ip_src.s_addr;
+	pseudo.dest = ip->ip_dst.s_addr;
+	pseudo.reserved = 0;
+	pseudo.protocol = IPPROTO_TCP;
+	pseudo.len = htons(sizeof(struct tcphdr))/*+ 20*/;
+	char *pseudogram = malloc(sizeof(struct pseudo_header) + sizeof(struct tcphdr));
+
+	memcpy(pseudogram, (char*)&pseudo, sizeof(struct pseudo_header));
+	memcpy(pseudogram + sizeof(struct pseudo_header), tcp, sizeof(struct tcphdr));
+
+	tcp->check = cksum((unsigned short*)pseudogram, sizeof(struct pseudo_header) + sizeof(struct tcphdr));
+	ip->ip_sum = cksum((unsigned short*)buffer, ip->ip_len);
 	printf("tcp check %d\n", tcp->check);
     return tcp;
 }
@@ -174,6 +190,20 @@ struct udphdr* configure_udp_header(char *buffer, int dst_port) {
     udp->source = htons(g_env.src_port);
     udp->dest = htons(dst_port);
     udp->len = htons(sizeof(struct udphdr));
+	
+	struct pseudo_header pseudo;
+	pseudo.source = ip->ip_src.s_addr;
+	pseudo.dest = ip->ip_dst.s_addr;
+	pseudo.reserved = 0;
+	pseudo.protocol = IPPROTO_UDP;
+	pseudo.len = htons(sizeof(struct udphdr))/*+ 20*/;
+	char *pseudogram = malloc(sizeof(struct pseudo_header) + sizeof(struct udphdr));
+
+	memcpy(pseudogram, (char*)&pseudo, sizeof(struct pseudo_header));
+	memcpy(pseudogram + sizeof(struct pseudo_header), udp, sizeof(struct udphdr));
+
+	udp->check = cksum((unsigned short*)pseudogram, sizeof(struct pseudo_header) + sizeof(struct udphdr));
+	ip->ip_sum = cksum((unsigned short*)buffer, ip->ip_len);
     udp->check = cksum((unsigned short*)udp, sizeof(struct udphdr));
 	printf("udp check %d\n", udp->check);
     return udp;

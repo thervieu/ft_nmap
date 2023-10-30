@@ -26,6 +26,7 @@
 # include <ifaddrs.h>
 # include <string.h>
 # include <errno.h>
+# include <stdint.h>
 
 # define NB_OPT 6
 

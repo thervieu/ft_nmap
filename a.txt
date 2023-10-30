@@ -1,0 +1,30 @@
+software architect
+
+design plan for new programs
+domain expert, software arch (UML), soft designer (data store, sec), soft dev
+
+feature driven design:
+1. fonction specification
+OOA: abstraction classification (big terms that will be manipulated)
+Can a Room/Teacher be assigned to a Course ?
+=> missing Abstraction, Section
+scheduling conflicts ?
+=> each assigned their own Schedule
+Prerequisite is a Course ?
+=> No, asvisory or mandatory, what if it is "prior experience"
+=> New Data Struct
+2. Conceptual class diagram (1:N:1)
+OOA: Behaviour
+Determine relationship between classes (UML)
+teacher:1-1:schedule
+teacher:1-N:section
+student:N-N:section => need a new Thing (Seat/ReportCard)
+3. Use cases
+OOD relationships
+attributes, class
+encapsulation (API, object service, and implementation)
+4. Sequence flows, crc, .h templates
+OOD/OOP Physical mapping
+5. Security, database, packaging, connections
+message broker (middleware)
+or common database
