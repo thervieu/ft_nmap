@@ -45,16 +45,16 @@ void scan(char *buf, t_scanner scanner, struct ip *ip) {
 	// sin.dest_addr = AF_INET;
 
     printf("thread %d: port %d: scan type %d: sendto %d\n", scanner.thread_id, scanner.port, scanner.scan_type, ip->ip_len);
-    int ret_sendto = sendto(g_env.socket_fd, buf, ip->ip_len, 0, (struct sockaddr *)&g_env.ip_and_hosts[g_env.ite_ip].dst_addr/*&sin*/, sizeof(struct sockaddr_in));
+    int ret_sendto = sendto(g_env.socket_fd, buf, ip->ip_len, 0, (struct sockaddr *)&g_env.ip_and_hosts[g_env.ite_ip].dst_addr, sizeof(struct sockaddr_in));
     printf("thread %d: ret sendto = |%d|\n", scanner.thread_id, ret_sendto);
-    if (ret_sendto < 0)
-        printf("errno: %s\n", strerror(errno));
-    // https://cpp.hotexamples.com/fr/site/file?hash=0xcf42149af84f0b881f83b4cce88aca7e474429ea0e6df9b1ffddd94d9b46c087
-    int ret = pcap_dispatch(handle, 1, packet_handler, (unsigned char *)&scanner);
-    printf("thread %d: ret pcap_dispatch = %d\n\n", scanner.thread_id, ret);
-    if (ret==0) {
-        // should do something here ??
-    }
+    // if (ret_sendto < 0)
+    //     printf("errno: %s\n", strerror(errno));
+    // // https://cpp.hotexamples.com/fr/site/file?hash=0xcf42149af84f0b881f83b4cce88aca7e474429ea0e6df9b1ffddd94d9b46c087
+    // int ret = pcap_dispatch(handle, 1, packet_handler, (unsigned char *)&scanner);
+    // printf("thread %d: ret pcap_dispatch = %d\n\n", scanner.thread_id, ret);
+    // if (ret==0) {
+    //     // should do something here ??
+    // }
     // store result
     return;
 }
@@ -72,7 +72,6 @@ void scan_thread(void *data) {
     struct ip *ip =  configure_ip(buffer, scanner.scan_type);
     if (scanner.scan_type^UDP) {
         configure_tcp_header(buffer, scanner.port, scanner.tcp_flags);
-        // print_buffer_tcp(buffer);
     }
     else {
         configure_udp_header(buffer, scanner.port);

@@ -122,7 +122,7 @@ t_scanner *init_scanner(int thread_id, int port_index, int scan_bit) {
     scanner->port = g_env.port[port_index];
     
     scanner->scan_bit = scan_bit;
-    scanner->tcp_flags = scan_to_flags(scan_bit);
+    scanner->tcp_flags = scan_to_flags(1<<scan_bit);
     scanner->scan_type = 1<<scan_bit;
 
     scanner->ip_str = g_env.ip_and_hosts[g_env.ite_ip].hostname;

@@ -157,12 +157,12 @@ struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
     tcp->seq = htonl(123);
     tcp->ack_seq = htonl(456);
     tcp->doff = 5;
-    tcp->fin = tcp_flags&FIN_F;
-    tcp->syn = tcp_flags&SYN_F;
-    tcp->rst = tcp_flags&RST_F;
-    tcp->psh = tcp_flags&PSH_F;
-    tcp->ack = tcp_flags&ACK_F;
-    tcp->urg = tcp_flags&URG_F;
+    tcp->fin = (tcp_flags&FIN_F) ? 1 : 0;
+    tcp->syn = (tcp_flags&SYN_F) ? 1 : 0;
+    tcp->rst = (tcp_flags&RST_F) ? 1 : 0;
+    tcp->psh = (tcp_flags&PSH_F) ? 1 : 0;
+    tcp->ack = (tcp_flags&ACK_F) ? 1 : 0;
+    tcp->urg = (tcp_flags&URG_F) ? 1 : 0;
     tcp->window = htons(8192);
     tcp->urg_ptr = 0;
 
