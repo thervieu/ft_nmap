@@ -12,6 +12,15 @@ void packet_handler(unsigned char *user, const struct pcap_pkthdr *pkthdr, const
     // Add your packet processing code here
 }
 
+pcap_t *handle;
+int		id;
+
+void	timeout_handler(int signal)
+{
+	pcap_breakloop(handle);
+	printf("Thread[%d]: Dispatch loop broke (%d)\n", id, signal);
+}
+
 // https://www.kaitotek.com/resources/documentation/concepts/packet-filter/pcap-filter-syntax#pcap_filter_syntax-primitives-host
 void scan(char *buf, t_scanner scanner, struct ip *ip) {
     char errbuf[100];
@@ -22,7 +31,7 @@ void scan(char *buf, t_scanner scanner, struct ip *ip) {
     if (pcap_lookupnet(g_env.device, &net, &mask, errbuf) < 0) {
         error_exit("pcap_lookup: could not find network device", 1);
     }
-    pcap_t *handle = pcap_open_live(g_env.device, BUFSIZ, 1, 1000, errbuf);
+    handle = pcap_open_live(g_env.device, BUFSIZ, 1, 1000, errbuf);
     if (handle==NULL) {
         error_exit("pcap_open_live: could not open device", 1);
     }
@@ -47,15 +56,25 @@ void scan(char *buf, t_scanner scanner, struct ip *ip) {
     printf("thread %d: port %d: scan type %d: sendto %d\n", scanner.thread_id, scanner.port, scanner.scan_type, ip->ip_len);
     int ret_sendto = sendto(g_env.socket_fd, buf, ip->ip_len, 0, (struct sockaddr *)&g_env.ip_and_hosts[g_env.ite_ip].dst_addr, sizeof(struct sockaddr_in));
     printf("thread %d: ret sendto = |%d|\n", scanner.thread_id, ret_sendto);
-    // if (ret_sendto < 0)
-    //     printf("errno: %s\n", strerror(errno));
-    // // https://cpp.hotexamples.com/fr/site/file?hash=0xcf42149af84f0b881f83b4cce88aca7e474429ea0e6df9b1ffddd94d9b46c087
-    // int ret = pcap_dispatch(handle, 1, packet_handler, (unsigned char *)&scanner);
-    // printf("thread %d: ret pcap_dispatch = %d\n\n", scanner.thread_id, ret);
-    // if (ret==0) {
-    //     // should do something here ??
-    // }
-    // store result
+    if (ret_sendto < 0) {
+        printf("errno: %s\n", strerror(errno));
+	}
+	struct sigaction sa;
+
+	sa.sa_handler = timeout_handler;
+	sa.sa_flags = SA_RESTART;
+	id = scanner.thread_id;
+	sigaction(SIGALRM, &sa, NULL);
+	alarm(3);
+	// // https://cpp.hotexamples.com/fr/site/file?hash=0xcf42149af84f0b881f83b4cce88aca7e474429ea0e6df9b1ffddd94d9b46c087
+    printf("start dispatch\n");
+	int ret = pcap_dispatch(handle, -1, packet_handler, (unsigned char *)&scanner);
+    printf("end dispatch\n");
+	printf("thread %d: ret pcap_dispatch = %d\n\n", scanner.thread_id, ret);
+   /* if (ret==0) {
+        // should do something here ??
+     }*/
+    //store result
     return;
 }
 
