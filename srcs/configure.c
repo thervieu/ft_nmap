@@ -115,7 +115,7 @@ struct ip *configure_ip(char *buffer, int scan_type) {
     ip->ip_ttl = 64; // option ttl
     ip->ip_p = (scan_type^UDP) ? IPPROTO_TCP : IPPROTO_UDP;
     ip->ip_sum = cksum((unsigned short*)ip, sizeof(struct ip));
-	printf("ip check %d\n", ip->ip_sum);
+	// printf("ip check %d\n", ip->ip_sum);
 
     char *interface = get_working_interface_ip();
 
@@ -125,7 +125,7 @@ struct ip *configure_ip(char *buffer, int scan_type) {
 		error_exit("inet pton interface src failed", 3);
 	}
     char *dst_ip_str = inet_ntoa(g_env.ip_and_hosts[g_env.ite_ip].ip);
-	printf("dst_ip_str = %s\n", dst_ip_str);
+	// printf("dst_ip_str = %s\n", dst_ip_str);
     ret = inet_pton(AF_INET, dst_ip_str, &(ip->ip_dst.s_addr));
 	if (ret != 1) {
 		printf("%d: errno: %s\n", ret, strerror(errno));
@@ -148,7 +148,7 @@ struct pseudo_header {
 
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
     struct ip *ip = (struct ip *)buffer;
-    printf("ip->ip_hl %d port src %d port dest %d \n", ip->ip_hl, g_env.src_port, dst_port);
+    // printf("ip->ip_hl %d port src %d port dest %d \n", ip->ip_hl, g_env.src_port, dst_port);
     struct tcphdr *tcp = (struct tcphdr *)(buffer + ip->ip_hl*4);
     // some options were not verified
     // seq, ack seq, doff, window, urg_ptr, check
@@ -179,7 +179,7 @@ struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
 
 	tcp->check = cksum((unsigned short*)pseudogram, sizeof(struct pseudo_header) + sizeof(struct tcphdr));
 	ip->ip_sum = cksum((unsigned short*)buffer, ip->ip_len);
-	printf("tcp check %d\n", tcp->check);
+	// printf("tcp check %d\n", tcp->check);
     return tcp;
 }
 
@@ -205,6 +205,6 @@ struct udphdr* configure_udp_header(char *buffer, int dst_port) {
 	udp->check = cksum((unsigned short*)pseudogram, sizeof(struct pseudo_header) + sizeof(struct udphdr));
 	ip->ip_sum = cksum((unsigned short*)buffer, ip->ip_len);
     udp->check = cksum((unsigned short*)udp, sizeof(struct udphdr));
-	printf("udp check %d\n", udp->check);
+	// printf("udp check %d\n", udp->check);
     return udp;
 }

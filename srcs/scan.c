@@ -1,80 +1,39 @@
 #include "../incs/ft_nmap.h"
 
-// void print_buffer_tcp()
-
-void packet_handler(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
-    // This is the callback function that will be called for each captured packet.
-    // You can process the packet data here.
-    printf("packet_handler\n");
-    (void)packet;
-    t_scanner *scanner = (t_scanner*)user;
-    printf("thread %d: port %d: scan type %d: Packet captured, length: %d\n", scanner->thread_id, scanner->port, scanner->scan_type, pkthdr->len);
-    // Add your packet processing code here
-}
-
-pcap_t *handle;
-int		id;
-
-void	timeout_handler(int signal)
-{
-	pcap_breakloop(handle);
-	printf("Thread[%d]: Dispatch loop broke (%d)\n", id, signal);
-}
-
 // https://www.kaitotek.com/resources/documentation/concepts/packet-filter/pcap-filter-syntax#pcap_filter_syntax-primitives-host
 void scan(char *buf, t_scanner scanner, struct ip *ip) {
-    char errbuf[100];
-    bpf_u_int32 net;
-    bpf_u_int32 mask;
-
-    pthread_mutex_lock(&(g_env.pcap_compile_m));
-    if (pcap_lookupnet(g_env.device, &net, &mask, errbuf) < 0) {
-        error_exit("pcap_lookup: could not find network device", 1);
-    }
-    handle = pcap_open_live(g_env.device, BUFSIZ, 1, 1000, errbuf);
-    if (handle==NULL) {
-        error_exit("pcap_open_live: could not open device", 1);
-    }
-    struct bpf_program fp;
-    /* Compile and apply the filter */
-	if (pcap_compile(handle, &fp, scanner.filter_exp, 0, net) == -1) {
-		fprintf(stderr, "Couldn't parse filter %s: %s\n", scanner.filter_exp, pcap_geterr(handle));
-        error_exit("pcap_compile", 2);
-    }
-	if (pcap_setfilter(handle, &fp) == -1) {
-		fprintf(stderr, "Couldn't install filter %s: %s\n", scanner.filter_exp, pcap_geterr(handle));
-        error_exit("pcap_setfilter", 2);
-	}
-    pthread_mutex_unlock(&(g_env.pcap_compile_m));
-
 	struct sockaddr sin; 
     bzero(&sin, sizeof(struct sockaddr));
-
 	sin.sa_family = AF_INET;
-	// sin.dest_addr = AF_INET;
 
-    printf("thread %d: port %d: scan type %d: sendto %d\n", scanner.thread_id, scanner.port, scanner.scan_type, ip->ip_len);
-    int ret_sendto = sendto(g_env.socket_fd, buf, ip->ip_len, 0, (struct sockaddr *)&g_env.ip_and_hosts[g_env.ite_ip].dst_addr, sizeof(struct sockaddr_in));
-    printf("thread %d: ret sendto = |%d|\n", scanner.thread_id, ret_sendto);
-    if (ret_sendto < 0) {
-        printf("errno: %s\n", strerror(errno));
-	}
-	struct sigaction sa;
+    struct pollfd fds[1];
+    memset(fds, 0 , sizeof(fds));
+    fds[0].fd = g_env.socket_fd;
+    fds[0].events = POLLOUT;
+    // fds[0].revents = POLLERR;
 
-	sa.sa_handler = timeout_handler;
-	sa.sa_flags = SA_RESTART;
-	id = scanner.thread_id;
-	sigaction(SIGALRM, &sa, NULL);
-	alarm(3);
-	// // https://cpp.hotexamples.com/fr/site/file?hash=0xcf42149af84f0b881f83b4cce88aca7e474429ea0e6df9b1ffddd94d9b46c087
-    printf("start dispatch\n");
-	int ret = pcap_dispatch(handle, -1, packet_handler, (unsigned char *)&scanner);
-    printf("end dispatch\n");
-	printf("thread %d: ret pcap_dispatch = %d\n\n", scanner.thread_id, ret);
-   /* if (ret==0) {
-        // should do something here ??
-     }*/
-    //store result
+    int ret = 0;
+    int ret_sendto = -1;
+    while (true) {
+        ret = poll(fds, 1, 1000);
+        if (ret>0) {
+            ret_sendto = sendto(g_env.socket_fd, buf, ip->ip_len, 0, (struct sockaddr *)&g_env.ip_and_hosts[g_env.ite_ip].dst_addr, sizeof(struct sockaddr_in));
+            if (ret_sendto < 0) {
+                printf("thread %d: sendto failed errno: %s\n", scanner.thread_id, strerror(errno));
+                // error_exit("sendto failed\n", 1);
+            }
+            break ;
+        }
+        else if (ret == 0) {
+            printf("poll timeout\n");
+            break ;
+        }
+        else if (ret < 0) {
+            error_exit("poll failed", 1);
+        }
+    }
+    // printf("thread %d: scan 0x%x: port %d:ret sendto = |%d|\n", scanner.thread_id, scanner.scan_type, scanner.port, ret_sendto);
+    
     return;
 }
 
@@ -97,7 +56,7 @@ void scan_thread(void *data) {
     }
 
     scan(buffer, scanner, ip);
-    g_env.results[g_env.ite_ip].ports_result[scanner.port_index].scan_results[g_env.scan_bit_to_index[scanner.scan_bit]].change_me = true;
+    // g_env.results[g_env.ite_ip].ports_result[scanner.port_index].scan_results[g_env.scan_bit_to_index[scanner.scan_bit]].change_me = true;
     pthread_mutex_lock(&(g_env.launch_thread_m));
     g_env.threads_availability[scanner.thread_id] = true;
     pthread_mutex_unlock(&(g_env.launch_thread_m));

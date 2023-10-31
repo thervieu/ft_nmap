@@ -27,6 +27,7 @@
 # include <string.h>
 # include <errno.h>
 # include <stdint.h>
+# include <sys/poll.h>
 
 # define NB_OPT 6
 
@@ -89,6 +90,7 @@ typedef struct s_env {
     */
     int nb_threads;
 
+    int			timeout;
     int			*port;
     int			nb_port;
     char		*file;

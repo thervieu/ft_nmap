@@ -126,15 +126,6 @@ t_scanner *init_scanner(int thread_id, int port_index, int scan_bit) {
     scanner->scan_type = 1<<scan_bit;
 
     scanner->ip_str = g_env.ip_and_hosts[g_env.ite_ip].hostname;
-    
-    // proper function ??
-    scanner->filter_exp = malloc(50);
-    bzero(scanner->filter_exp, 50*sizeof(char));
-    char *type = scan_bit^UDP ? "tcp port " : "udp port ";
-    scanner->filter_exp = ft_strcpy(scanner->filter_exp, type);
-    scanner->filter_exp = ft_strcat(scanner->filter_exp, ft_itoa(scanner->port));
-    scanner->filter_exp = ft_strcat(scanner->filter_exp, " and src host ");
-    scanner->filter_exp = ft_strcat(scanner->filter_exp, inet_ntoa(g_env.ip_and_hosts[g_env.ite_ip].ip));
 
     g_env.threads_availability[thread_id] = false;
 
@@ -156,12 +147,80 @@ void scan_loop(int port_index) {
     }
 }
 
+
+void packet_handler(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
+    // This is the callback function that will be called for each captured packet.
+    // You can process the packet data here.
+    (void)packet;
+    (void)user;
+    printf("Packet captured, length: %d\n", pkthdr->len);
+    // Add your packet processing code here
+}
+
+pcap_t *handle;
+
+void	timeout_handler(int signal)
+{
+	pcap_breakloop(handle);
+	printf("alarm %d donc pcap_breakloop\n", signal);
+}
+
 void ports_loop(void) {
     int i = 0;
     while (i < g_env.nb_port) {
         scan_loop(i);
         i++;
     }
+
+    // proper function ??
+    char *filter_exp = malloc(30);
+    bzero(filter_exp, 30*sizeof(char));
+    filter_exp = ft_strcat(filter_exp, "src host ");
+    filter_exp = ft_strcat(filter_exp, inet_ntoa(g_env.ip_and_hosts[g_env.ite_ip].ip));
+
+    char errbuf[100];
+    bpf_u_int32 net;
+    bpf_u_int32 mask;
+
+    if (pcap_lookupnet(g_env.device, &net, &mask, errbuf) < 0) {
+        error_exit("pcap_lookup: could not find network device", 1);
+    }
+    handle = pcap_open_live(g_env.device, BUFSIZ, 1, 1000, errbuf);
+    if (handle==NULL) {
+        error_exit("pcap_open_live: could not open device", 1);
+    }
+    struct bpf_program fp;
+    /* Compile and apply the filter */
+	if (pcap_compile(handle, &fp, filter_exp, 0, net) == -1) {
+		fprintf(stderr, "Couldn't parse filter %s: %s\n", filter_exp, pcap_geterr(handle));
+        error_exit("pcap_compile failed", 2);
+    }
+	if (pcap_setfilter(handle, &fp) == -1) {
+		fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(handle));
+        error_exit("pcap_setfilter failed", 2);
+	}
+	struct sigaction sa;
+
+	sa.sa_handler = timeout_handler;
+	sa.sa_flags = SA_RESTART;
+	sigaction(SIGALRM, &sa, NULL);
+	alarm(g_env.timeout);
+
+    void *a=NULL;
+	// // https://cpp.hotexamples.com/fr/site/file?hash=0xcf42149af84f0b881f83b4cce88aca7e474429ea0e6df9b1ffddd94d9b46c087
+    while (true) {
+        printf("HERE\n");
+	    int ret = pcap_dispatch(handle, -1, packet_handler, (unsigned char *)&a);
+        printf("ret dispatch %d\n", ret);
+        if (ret == -1) {
+            error_exit("error: pcap_dispatch failed", 1);
+        }
+        if (ret == -2) {
+            printf("BREAK LOOP\n");
+            break ;
+        }
+    }
+    // display
 }
 
 void wait_for_all_threads(void) {
