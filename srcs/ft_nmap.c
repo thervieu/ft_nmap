@@ -29,7 +29,7 @@ int get_interface(void) {
 }
 
 void init_global(void) {
-    g_env.timeout = 1;
+    g_env.timeout = 5;
     g_env.src_port = 80;
     g_env.nb_port = 1024;
     g_env.port = (int*)malloc(sizeof(int)*g_env.nb_port);
@@ -157,4 +157,5 @@ int main(int ac, char **av) {
     ip_loop(); // (all threads creation/deletion should be done here)
     // display_results();
     // free_global();
+    close(g_env.socket_fd);
 }

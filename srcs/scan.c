@@ -9,18 +9,23 @@ void scan(char *buf, t_scanner scanner, struct ip *ip) {
     struct pollfd fds[1];
     memset(fds, 0 , sizeof(fds));
     fds[0].fd = g_env.socket_fd;
-    fds[0].events = POLLOUT;
-    // fds[0].revents = POLLERR;
+    fds[0].events = POLLOUT | POLLERR;
 
     int ret = 0;
     int ret_sendto = -1;
     while (true) {
         ret = poll(fds, 1, 1000);
         if (ret>0) {
-            ret_sendto = sendto(g_env.socket_fd, buf, ip->ip_len, 0, (struct sockaddr *)&g_env.ip_and_hosts[g_env.ite_ip].dst_addr, sizeof(struct sockaddr_in));
-            if (ret_sendto < 0) {
-                printf("thread %d: sendto failed errno: %s\n", scanner.thread_id, strerror(errno));
-                // error_exit("sendto failed\n", 1);
+            if (fds[0].revents & POLLOUT) {
+                ret_sendto = sendto(g_env.socket_fd, buf, ip->ip_len, 0, (struct sockaddr *)&g_env.ip_and_hosts[g_env.ite_ip].dst_addr, sizeof(struct sockaddr_in));
+                if (ret_sendto < 0) {
+                    printf("thread %d: sendto failed errno: %s\n", scanner.thread_id, strerror(errno));
+                    printf("poll revents %d\n", fds[0].revents);
+                    // error_exit("sendto failed\n", 1);
+                }
+            }
+            else {
+                printf("poll revents %d\n", fds[0].revents);
             }
             break ;
         }
