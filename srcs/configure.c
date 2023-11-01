@@ -50,6 +50,7 @@ char	*ft_strdup(const char *src)
 	return (dest);
 }
 
+
 char *get_working_interface_ip(void) {
 	struct ifaddrs *ifap;
 	struct ifaddrs *ifa;
@@ -74,6 +75,7 @@ char *get_working_interface_ip(void) {
     }
 	return (addr);
 }
+
 
 unsigned short	cksum(unsigned short *addr, int len)
 {
@@ -131,7 +133,6 @@ struct ip *configure_ip(char *buffer, int scan_type) {
 		printf("%d: errno: %s\n", ret, strerror(errno));
 		error_exit("inet pton interface src failed", 3);
 	}
-
     free(interface);
 
     return ip;
@@ -150,6 +151,7 @@ struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
     struct ip *ip = (struct ip *)buffer;
     // printf("ip->ip_hl %d port src %d port dest %d \n", ip->ip_hl, g_env.src_port, dst_port);
     struct tcphdr *tcp = (struct tcphdr *)(buffer + ip->ip_hl*4);
+
     // some options were not verified
     // seq, ack seq, doff, window, urg_ptr, check
     tcp->source = htons(g_env.src_port);
@@ -182,6 +184,7 @@ struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
 	tcp->check = cksum((unsigned short*)pseudogram, sizeof(struct pseudo_header) + sizeof(struct tcphdr));
 	ip->ip_sum = cksum((unsigned short*)buffer, ip->ip_len);
 	// printf("tcp check %d\n", tcp->check);
+
     return tcp;
 }
 

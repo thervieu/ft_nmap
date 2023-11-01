@@ -10,7 +10,9 @@
 # include <netinet/ip.h>
 # include <netinet/tcp.h>
 # include <netinet/udp.h>
+
 # include <net/ethernet.h>
+
 # include <netinet/ip_icmp.h>
 # include <netdb.h>
 # include <sys/time.h>
@@ -23,7 +25,9 @@
 # include <pthread.h>
 
 # include <pcap/pcap.h>
+
 # include <pcap/sll.h>
+
 
 # include <ifaddrs.h>
 # include <string.h>
@@ -172,6 +176,7 @@ void ip_loop(void);
 
 // configure.c
 void configure_socket(void);
+
 struct ip *configure_ip(char *buffer, int scan_type);
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags);
 struct udphdr* configure_udp_header(char *buffer, int dst_port);
