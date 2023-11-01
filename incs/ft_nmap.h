@@ -50,6 +50,11 @@
 # define ACK_F 0x10
 # define URG_F 0x20
 
+# define UNFILTERED 0x00 // can set this because UNFILTERED is always alone
+# define OPEN 0x01
+# define CLOSE 0x02
+# define FILTERED 0x04
+
 # define PACKET_BUFFER_SIZE 64
 
 typedef struct	s_pars {
@@ -71,7 +76,8 @@ typedef struct	s_network {
 }				t_network;
 
 typedef struct s_scan_result {
-    bool change_me;
+    uint8_t state;
+    char *service;
 }   t_scan_result;
 
 typedef struct s_port_result {

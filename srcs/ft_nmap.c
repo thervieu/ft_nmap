@@ -52,6 +52,37 @@ void init_global(void) {
     }
 }
 
+void init_scan_result(int it_ip, int it_port) {
+    g_env.results[it_ip].ports_result[it_port].scan_results = (t_scan_result*)malloc(sizeof(t_scan_result)*(g_env.nb_scans));
+    if (g_env.results[it_ip].ports_result[it_port].scan_results == NULL) {
+        error_exit("malloc failed scan_results array", 1);
+    }
+    for (int i = 0; i < 6; i++) {
+        if ((g_env.scan>>i & 1) == 0) {
+            continue;
+        }
+        switch (i) {
+            case 0:
+                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = FILTERED;
+                break ;
+            case 1:
+                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
+                break ;
+            case 2:
+                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = UNFILTERED;
+                break ;
+            case 3:
+                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
+                break ;
+            case 4:
+                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
+                break ;
+            case 5:
+                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
+                break ;
+        }
+    }
+}
 
 void init_structs_global(void) {
     int scan_length = 0;
@@ -66,6 +97,7 @@ void init_structs_global(void) {
         error_exit("malloc failed scan_bit_to_index", 1);
     }
     int scan_index = 0;
+    // printf("scans 0x%x")
     for (int i=0; i<6; i++) {
         if (g_env.scan>>i & 1) {
             g_env.scan_bit_to_index[i] = scan_index;
@@ -85,13 +117,7 @@ void init_structs_global(void) {
         int index_port = 0;
         while (index_port < g_env.nb_port) {
             g_env.results[i].ports_result[index_port].port = g_env.port[index_port];
-            g_env.results[i].ports_result[index_port].scan_results = (t_scan_result*)malloc(sizeof(t_scan_result)*(g_env.nb_scans));
-            if (g_env.results[i].ports_result[index_port].scan_results == NULL) {
-                error_exit("malloc failed scan_results array", 1);
-            }
-            for (int j = 0; j < g_env.nb_scans; j++) {
-                g_env.results[i].ports_result[index_port].scan_results[j].change_me = false;
-            }
+            init_scan_result(i, index_port);
             index_port++;
         }
         i++;
