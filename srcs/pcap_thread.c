@@ -6,16 +6,7 @@ void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     // You can process the packet data here.
     (void)packet;
     (void)user;
-    printf("Packet captured, length: %d\n", pkthdr->len);
-    // Add your packet processing code here
-}
-
-void packet_handler_FIN(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
-    // This is the callback function that will be called for each captured packet.
-    // You can process the packet data here.
-    (void)packet;
-    (void)user;
-    printf("Packet captured, length: %d\n", pkthdr->len);
+    printf("SYN Packet captured, length: %d\n", pkthdr->len);
     // Add your packet processing code here
 }
 
@@ -24,24 +15,35 @@ void packet_handler_NULL(unsigned char *user, const struct pcap_pkthdr *pkthdr, 
     // You can process the packet data here.
     (void)packet;
     (void)user;
-    printf("Packet captured, length: %d\n", pkthdr->len);
+    printf("NULL Packet captured, length: %d\n", pkthdr->len);
     // Add your packet processing code here
 }
+
 void packet_handler_ACK(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     // This is the callback function that will be called for each captured packet.
     // You can process the packet data here.
     (void)packet;
     (void)user;
-    printf("Packet captured, length: %d\n", pkthdr->len);
+    printf("ACK Packet captured, length: %d\n", pkthdr->len);
     // Add your packet processing code here
 }
+
+void packet_handler_FIN(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
+    // This is the callback function that will be called for each captured packet.
+    // You can process the packet data here.
+    (void)packet;
+    (void)user;
+    printf("FIN Packet captured, length: %d\n", pkthdr->len);
+    // Add your packet processing code here
+}
+
 
 void packet_handler_XMAS(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     // This is the callback function that will be called for each captured packet.
     // You can process the packet data here.
     (void)packet;
     (void)user;
-    printf("Packet captured, length: %d\n", pkthdr->len);
+    printf("XMAS Packet captured, length: %d\n", pkthdr->len);
     // Add your packet processing code here
 }
 
@@ -50,7 +52,7 @@ void packet_handler_UDP(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     // You can process the packet data here.
     (void)packet;
     (void)user;
-    printf("Packet captured, length: %d\n", pkthdr->len);
+    printf("UDP Packet captured, length: %d\n", pkthdr->len);
     // Add your packet processing code here
 }
 
@@ -80,17 +82,26 @@ char	*ft_strcat(char *s1, const char *s2)
 }
 
 void pcap_thread(void *data) {
-    int *scan_bit = (int*)data;
-    printf("pcap thread scan_bit %d\n", *scan_bit);
+    int scan_bit = *(int*)data;
+    printf("pcap thread scan_bit %d\n", scan_bit);
 
-    char *filter_exp = malloc(50);
+    t_map_function map_function[NB_SCAN] = {
+        {packet_handler_SYN},
+        {packet_handler_NULL},
+        {packet_handler_ACK},
+        {packet_handler_FIN},
+        {packet_handler_XMAS},
+        {packet_handler_UDP}
+    };
+
+    char *filter_exp = malloc(60);
     if (filter_exp == NULL) {
         error_exit("malloc failed", 1);
     }
-    bzero(filter_exp, 50*sizeof(char));
+    bzero(filter_exp, 60*sizeof(char));
     filter_exp = ft_strcat(filter_exp, "src host ");
     filter_exp = ft_strcat(filter_exp, inet_ntoa(g_env.ip_and_hosts[g_env.ite_ip].ip));
-    filter_exp = ft_strcat(filter_exp, " and (tcp or udp)");
+    filter_exp = ft_strcat(filter_exp, (((scan_bit&5) != 5) ? " and (tcp or icmp)" : " and (udp or icmp)"));
 
     char errbuf[100];
     bpf_u_int32 net;
@@ -124,7 +135,7 @@ void pcap_thread(void *data) {
 	// // https://cpp.hotexamples.com/fr/site/file?hash=0xcf42149af84f0b881f83b4cce88aca7e474429ea0e6df9b1ffddd94d9b46c087
     pthread_mutex_unlock(&(g_env.pcap_compile_m));
     while (true) {
-	    int ret = pcap_dispatch(g_env.handle, -1, packet_handler_SYN, (unsigned char *)&a);
+	    int ret = pcap_dispatch(g_env.handle, -1, map_function[scan_bit].callback_function, (unsigned char *)&a);
         if (ret >= 0) {
             printf("ret dispatch %d\n", ret);
         }
@@ -144,5 +155,4 @@ void setup_pcap(int *scan_bit) {
         printf("pcap thread failed\n");
         error_exit("pthread_create failed", 1);
     }
-    printf("pcap thread created\n");
 }

@@ -149,6 +149,10 @@ typedef struct s_scanner {
     // sockaddr_in
 }   t_scanner;
 
+typedef struct s_map_function {
+    void (*callback_function)(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet);
+}               t_map_function;
+
 extern t_env g_env;
 
 // ft_nmap.c

@@ -57,7 +57,7 @@ void init_scan_result(int it_ip, int it_port) {
     if (g_env.results[it_ip].ports_result[it_port].scan_results == NULL) {
         error_exit("malloc failed scan_results array", 1);
     }
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < NB_SCAN; i++) {
         if ((g_env.scan>>i & 1) == 0) {
             continue;
         }
@@ -86,19 +86,19 @@ void init_scan_result(int it_ip, int it_port) {
 
 void init_structs_global(void) {
     int scan_length = 0;
-    for (int i=0; i<6;i++) {
+    for (int i=0; i<NB_SCAN; i++) {
         if (g_env.scan>>i & 1) {
             scan_length++;
         }
     }
     g_env.nb_scans = scan_length;
-    g_env.scan_bit_to_index = (int*)malloc(sizeof(int)*6);
+    g_env.scan_bit_to_index = (int*)malloc(sizeof(int)*NB_SCAN);
     if (g_env.scan_bit_to_index == NULL) {
         error_exit("malloc failed scan_bit_to_index", 1);
     }
     int scan_index = 0;
     // printf("scans 0x%x")
-    for (int i=0; i<6; i++) {
+    for (int i=0; i<NB_SCAN; i++) {
         if (g_env.scan>>i & 1) {
             g_env.scan_bit_to_index[i] = scan_index;
             scan_index++;
