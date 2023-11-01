@@ -32,7 +32,70 @@ int scan_to_flags(int scan) {
     return FIN_F|PSH_F|URG_F|SYN_F|RST_F;
 }
 
-t_scanner *init_scanner(int thread_id, int port_index, int scan_bit, char *ip) {
+static int		length(long nb)
+{
+	int		len;
+
+	len = 0;
+	if (nb == 0)
+		return (1);
+	if (nb < 0)
+	{
+		nb = nb * -1;
+		len++;
+	}
+	while (nb > 0)
+	{
+		nb = nb / 10;
+		len++;
+	}
+	return (len);
+}
+
+char			*ft_itoa(int nb)
+{
+	char	*str;
+	long	n;
+	int		len;
+
+	n = nb;
+	len = length(n);
+	if (!(str = (char*)malloc(sizeof(char) * (len + 1))))
+		return (NULL);
+	str[len--] = '\0';
+	if (n == 0)
+	{
+		str[0] = 48;
+		return (str);
+	}
+	if (n < 0)
+	{
+		str[0] = '-';
+		n = n * -1;
+	}
+	while (n > 0)
+	{
+		str[len--] = 48 + (n % 10);
+		n = n / 10;
+	}
+	return (str);
+}
+
+char	*ft_strcpy(char *dst, const char *src)
+{
+	int		i;
+
+	i = 0;
+	while (src[i])
+	{
+		dst[i] = src[i];
+		i++;
+	}
+	dst[i] = '\0';
+	return (dst);
+}
+
+t_scanner *init_scanner(int thread_id, int port_index, int scan_bit) {
     t_scanner *scanner = (t_scanner*)malloc(sizeof(t_scanner));
     
     scanner->thread_id = thread_id;
@@ -41,37 +104,28 @@ t_scanner *init_scanner(int thread_id, int port_index, int scan_bit, char *ip) {
     scanner->port = g_env.port[port_index];
     
     scanner->scan_bit = scan_bit;
-    scanner->tcp_flags = scan_to_flags(scan_bit);
+    scanner->tcp_flags = scan_to_flags(1<<scan_bit);
     scanner->scan_type = 1<<scan_bit;
 
-    scanner->ip_str = ip;
+    scanner->ip_str = g_env.ip_and_hosts[g_env.ite_ip].hostname;
 
     g_env.threads_availability[thread_id] = false;
 
     return scanner;
 }
 
-void scan_loop(int port_index, char *ip) {
-    int scan_bit = 0;
-    while (scan_bit < NB_SCAN) {
-        if (g_env.scan>>scan_bit & 1) {
-            int thread_id = get_available_thread();
-            t_scanner *scanner = init_scanner(thread_id, port_index, scan_bit, ip);
-            if (pthread_create(&(g_env.scanner_threads[thread_id]), NULL, (void*)&scan_thread, (void*)scanner) != 0) {
-                printf("thread %d failed\n", thread_id);
-                error_exit("pthread_create failed", 1);
-            }
-        }
-        scan_bit++;
-    }
-}
-
-void ports_loop(char *ip) {
+void port_loop(int scan_bit) {
     int i = 0;
     while (i < g_env.nb_port) {
-        scan_loop(i, ip);
+        int thread_id = get_available_thread();
+        t_scanner *scanner = init_scanner(thread_id, i, scan_bit);
+        if (pthread_create(&(g_env.scanner_threads[thread_id]), NULL, (void*)&scan_thread, (void*)scanner) != 0) {
+            printf("thread %d failed\n", thread_id);
+            error_exit("pthread_create failed", 1);
+        }
         i++;
     }
+    // display
 }
 
 void wait_for_all_threads(void) {
@@ -86,18 +140,34 @@ void wait_for_all_threads(void) {
         }
         pthread_mutex_unlock(&(g_env.launch_thread_m));
     }
+    if (pthread_join(*g_env.pcap_thread, NULL) < 0) {
+        error_exit("pthread_join failed", 1);
+    }
+}
+
+void scan_loop(void) {
+    int scan_bit = 0;
+    while (scan_bit < NB_SCAN) {
+        if (g_env.scan>>scan_bit & 1) {
+            setup_pcap(&scan_bit);
+            pthread_mutex_lock(&(g_env.pcap_compile_m));
+            pthread_mutex_unlock(&(g_env.pcap_compile_m));
+            port_loop(scan_bit);
+            wait_for_all_threads();
+        }
+        scan_bit++;
+    }
 }
 
 void ip_loop(void) {
     // gettimeofday();
-    
+
     configure_socket();
-    // for loop on ip/hosts
+    
     g_env.ite_ip = 0;  
     while (g_env.ite_ip < g_env.nb_ips) {
-        ports_loop(g_env.ip_and_hosts[g_env.ite_ip].hostname/*, socket */);
+        scan_loop();
         wait_for_all_threads();
         g_env.ite_ip++;
     }
-    printf("end of ip_loop\n");
 }

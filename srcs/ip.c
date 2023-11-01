@@ -20,6 +20,7 @@ static int		lookup_host(char *host, int ip_idx)
 	dst = (*(struct sockaddr_in *)res->ai_addr);
 	g_env.ip_and_hosts[ip_idx].ip = dst.sin_addr;
 	g_env.ip_and_hosts[ip_idx].canonname = ft_strdup(res->ai_canonname);
+	g_env.ip_and_hosts[ip_idx].dst_addr = dst;
 	while (res != NULL)
 	{
 		getnameinfo((struct sockaddr *)&dst, sizeof(struct sockaddr), name, 255, NULL, 0, NI_NUMERICSERV);

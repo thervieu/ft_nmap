@@ -245,6 +245,9 @@ static int		format_file(char *file)
 	while (hosts[g_env.nb_ips])
 		g_env.nb_ips++;
 	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
+	if (g_env.ip_and_hosts == NULL) {
+		error_exit("malloc ip_and_hosts failed", 1);
+	}
 	printf("\n");
 	for (int i = 0; i < g_env.nb_ips; i++)
 	{

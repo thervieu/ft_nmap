@@ -1,12 +1,13 @@
 #include "../incs/ft_nmap.h"
 
 void configure_socket(void) {
-    if ((g_env.socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) < 0) {
+    if ((g_env.socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
         printf("%d %s\n", g_env.socket_fd, strerror(errno));
         error_exit("error: creating socket", 1);
     }
     int hincl = 1;
     if (setsockopt(g_env.socket_fd, IPPROTO_IP, IP_HDRINCL, &hincl, sizeof(hincl)) < 0) {
+        printf("%d %s\n", g_env.socket_fd, strerror(errno));
         error_exit("error: setsockopt", 1);
     }
 }
@@ -49,7 +50,8 @@ char	*ft_strdup(const char *src)
 	return (dest);
 }
 
-char *get_working_interface(void) {
+
+char *get_working_interface_ip(void) {
 	struct ifaddrs *ifap;
 	struct ifaddrs *ifa;
 	char *addr;
@@ -74,27 +76,6 @@ char *get_working_interface(void) {
 	return (addr);
 }
 
-struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type) {
-    struct ip *ip;
-    ip = (struct ip*)buffer;
-
-    ip->ip_v = 4;
-    ip->ip_hl = 5; // idk
-    ip->ip_tos = 0;
-    ip->ip_len = sizeof(struct ip) + (scan_type^UDP) ? sizeof(struct tcphdr) : sizeof(struct udphdr);
-    ip->ip_id = 0;
-    ip->ip_off = 0;
-    ip->ip_ttl = 64; // option ttl
-    ip->ip_p = (scan_type^UDP) ? IPPROTO_TCP : IPPROTO_UDP;
-    ip->ip_sum = 0;
-
-    char *interface = get_working_interface();
-    inet_pton(AF_INET, interface, &(ip->ip_src.s_addr));
-    inet_pton(AF_INET, ip_dst, &(ip->ip_dst.s_addr));
-    free(interface);
-
-    return ip;
-}
 
 unsigned short	cksum(unsigned short *addr, int len)
 {
@@ -110,7 +91,7 @@ unsigned short	cksum(unsigned short *addr, int len)
 	while (nleft > 1)
 	{
 		sum += *w++;
-		nleft -= 2;
+		nleft -= sizeof(unsigned short);
 	}
 	if (nleft == 1)
 	{
@@ -123,10 +104,54 @@ unsigned short	cksum(unsigned short *addr, int len)
 	return (ans);
 }
 
+struct ip *configure_ip(char *buffer, int scan_type) {
+    struct ip *ip;
+    ip = (struct ip*)buffer;
+
+    ip->ip_v = 4;
+    ip->ip_hl = 5; // idk
+    ip->ip_tos = 0;
+    ip->ip_len = sizeof(struct ip) + ((scan_type^UDP) ? sizeof(struct tcphdr) : sizeof(struct udphdr));
+	ip->ip_id = 0;
+    ip->ip_off = 0;
+    ip->ip_ttl = 64; // option ttl
+    ip->ip_p = (scan_type^UDP) ? IPPROTO_TCP : IPPROTO_UDP;
+    ip->ip_sum = cksum((unsigned short*)ip, sizeof(struct ip));
+	// printf("ip check %d\n", ip->ip_sum);
+
+    char *interface = get_working_interface_ip();
+
+    int ret = inet_pton(AF_INET, interface, &(ip->ip_src.s_addr));
+	if (ret != 1) {
+		printf("%d: errno: %s\n", ret, strerror(errno));
+		error_exit("inet pton interface src failed", 3);
+	}
+    char *dst_ip_str = inet_ntoa(g_env.ip_and_hosts[g_env.ite_ip].ip);
+	// printf("dst_ip_str = %s\n", dst_ip_str);
+    ret = inet_pton(AF_INET, dst_ip_str, &(ip->ip_dst.s_addr));
+	if (ret != 1) {
+		printf("%d: errno: %s\n", ret, strerror(errno));
+		error_exit("inet pton interface src failed", 3);
+	}
+    free(interface);
+
+    return ip;
+}
+
+
+struct pseudo_header {
+	uint32_t source;
+	uint32_t dest;
+	uint8_t reserved;
+	uint8_t protocol;
+	uint16_t len;
+};
+
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
-    struct iphdr *ip = (struct iphdr *)buffer;
-    
-    struct tcphdr *tcp = (struct tcphdr *)(buffer + ip->ihl*4);
+    struct ip *ip = (struct ip *)buffer;
+    // printf("ip->ip_hl %d port src %d port dest %d \n", ip->ip_hl, g_env.src_port, dst_port);
+    struct tcphdr *tcp = (struct tcphdr *)(buffer + ip->ip_hl*4);
+
     // some options were not verified
     // seq, ack seq, doff, window, urg_ptr, check
     tcp->source = htons(g_env.src_port);
@@ -134,25 +159,59 @@ struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
     tcp->seq = htonl(123);
     tcp->ack_seq = htonl(456);
     tcp->doff = 5;
-    tcp->fin = tcp_flags&FIN_F;
-    tcp->syn = tcp_flags&SYN_F;
-    tcp->rst = tcp_flags&RST_F;
-    tcp->psh = tcp_flags&PSH_F;
-    tcp->ack = tcp_flags&ACK_F;
-    tcp->urg = tcp_flags&URG_F;
+    tcp->fin = (tcp_flags&FIN_F) ? 1 : 0;
+    tcp->syn = (tcp_flags&SYN_F) ? 1 : 0;
+    tcp->rst = (tcp_flags&RST_F) ? 1 : 0;
+    tcp->psh = (tcp_flags&PSH_F) ? 1 : 0;
+    tcp->ack = (tcp_flags&ACK_F) ? 1 : 0;
+    tcp->urg = (tcp_flags&URG_F) ? 1 : 0;
     tcp->window = htons(8192);
     tcp->urg_ptr = 0;
-    tcp->check = cksum((unsigned short *)ip, ip->ihl); // htons? will likely need sub function because TPC_LEN != UDP_LEN
+
+	struct pseudo_header pseudo;
+	pseudo.source = ip->ip_src.s_addr;
+	pseudo.dest = ip->ip_dst.s_addr;
+	pseudo.reserved = 0;
+	pseudo.protocol = IPPROTO_TCP;
+	pseudo.len = htons(sizeof(struct tcphdr))/*+ 20*/;
+	char *pseudogram = malloc(sizeof(struct pseudo_header) + sizeof(struct tcphdr));
+	if (pseudogram==NULL) {
+		error_exit("malloc pseudogram tcp failed", 1);
+	}
+	memcpy(pseudogram, (char*)&pseudo, sizeof(struct pseudo_header));
+	memcpy(pseudogram + sizeof(struct pseudo_header), tcp, sizeof(struct tcphdr));
+
+	tcp->check = cksum((unsigned short*)pseudogram, sizeof(struct pseudo_header) + sizeof(struct tcphdr));
+	ip->ip_sum = cksum((unsigned short*)buffer, ip->ip_len);
+	// printf("tcp check %d\n", tcp->check);
+
     return tcp;
 }
 
 struct udphdr* configure_udp_header(char *buffer, int dst_port) {
-    struct iphdr *ip = (struct iphdr *)buffer;
+    struct ip *ip = (struct ip *)buffer;
     
-    struct udphdr *udp = (struct udphdr *)(buffer + ip->ihl*4);
+    struct udphdr *udp = (struct udphdr *)(buffer + ip->ip_hl*4);
     udp->source = htons(g_env.src_port);
     udp->dest = htons(dst_port);
     udp->len = htons(sizeof(struct udphdr));
-    udp->check = cksum((unsigned short *)ip, ip->ihl); // htons? will likely need sub function because TPC_LEN != UDP_LEN
+	
+	struct pseudo_header pseudo;
+	pseudo.source = ip->ip_src.s_addr;
+	pseudo.dest = ip->ip_dst.s_addr;
+	pseudo.reserved = 0;
+	pseudo.protocol = IPPROTO_UDP;
+	pseudo.len = htons(sizeof(struct udphdr))/*+ 20*/;
+	char *pseudogram = malloc(sizeof(struct pseudo_header) + sizeof(struct udphdr));
+	if (pseudogram==NULL) {
+		error_exit("malloc pseudogram udp failed", 1);
+	}
+	memcpy(pseudogram, (char*)&pseudo, sizeof(struct pseudo_header));
+	memcpy(pseudogram + sizeof(struct pseudo_header), udp, sizeof(struct udphdr));
+
+	udp->check = cksum((unsigned short*)pseudogram, sizeof(struct pseudo_header) + sizeof(struct udphdr));
+	ip->ip_sum = cksum((unsigned short*)buffer, ip->ip_len);
+    udp->check = cksum((unsigned short*)udp, sizeof(struct udphdr));
+	// printf("udp check %d\n", udp->check);
     return udp;
 }

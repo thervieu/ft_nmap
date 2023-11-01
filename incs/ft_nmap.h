@@ -10,6 +10,9 @@
 # include <netinet/ip.h>
 # include <netinet/tcp.h>
 # include <netinet/udp.h>
+
+# include <net/ethernet.h>
+
 # include <netinet/ip_icmp.h>
 # include <netdb.h>
 # include <sys/time.h>
@@ -23,9 +26,14 @@
 
 # include <pcap/pcap.h>
 
+# include <pcap/sll.h>
+
+
 # include <ifaddrs.h>
 # include <string.h>
 # include <errno.h>
+# include <stdint.h>
+# include <sys/poll.h>
 
 # define NB_OPT 6
 
@@ -48,6 +56,11 @@
 # define ACK_F 0x10
 # define URG_F 0x20
 
+# define UNFILTERED 0x00 // can set this because UNFILTERED is always alone
+# define OPEN 0x01
+# define CLOSE 0x02
+# define FILTERED 0x04
+
 # define PACKET_BUFFER_SIZE 64
 
 typedef struct	s_pars {
@@ -65,10 +78,12 @@ typedef struct	s_network {
 	char		*nameinfo;
 	char		*canonname;
 	t_addr		ip;
+	struct sockaddr_in	dst_addr;
 }				t_network;
 
 typedef struct s_scan_result {
-    bool change_me;
+    uint8_t state;
+    char *service;
 }   t_scan_result;
 
 typedef struct s_port_result {
@@ -87,6 +102,7 @@ typedef struct s_env {
     */
     int nb_threads;
 
+    int			timeout;
     int			*port;
     int			nb_port;
     char		*file;
@@ -106,11 +122,14 @@ typedef struct s_env {
     int *scan_bit_to_index;
     char *device;
     pthread_t *scanner_threads;
+    pthread_t *pcap_thread;
+    pcap_t *handle;
     bool *threads_availability;
     t_result *results; // array of size len(ip/hosts)
     // -> will have an array of result_ports
     // -> result_ports will have an array / enum for each scan
     pthread_mutex_t launch_thread_m;
+    pthread_mutex_t pcap_compile_m;
 
 
     /*
@@ -129,11 +148,16 @@ typedef struct s_scanner {
     int scan_bit;
     int scan_type;
     char *ip_str;
+    char *filter_exp;
     // char *buffer;
     // seq
     // ack_seq
     // sockaddr_in
 }   t_scanner;
+
+typedef struct s_map_function {
+    void (*callback_function)(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet);
+}               t_map_function;
 
 extern t_env g_env;
 
@@ -152,14 +176,19 @@ void ip_loop(void);
 
 // configure.c
 void configure_socket(void);
-struct ip *configure_ip(char *buffer, char *ip_dst, int scan_type);
+
+struct ip *configure_ip(char *buffer, int scan_type);
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags);
 struct udphdr* configure_udp_header(char *buffer, int dst_port);
+char *get_working_interface_ip(void);
 
 // scan.c
 void scan_thread(void *data);
 
 //ip.c
 int			get_ip_addr(char *host, int ip_idx);
+
+// pcap_thread.c
+void setup_pcap(int *scan_bit);
 
 #endif
