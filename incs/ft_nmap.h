@@ -110,6 +110,8 @@ typedef struct s_env {
     int *scan_bit_to_index;
     char *device;
     pthread_t *scanner_threads;
+    pthread_t *pcap_thread;
+    pcap_t *handle;
     bool *threads_availability;
     t_result *results; // array of size len(ip/hosts)
     // -> will have an array of result_ports
@@ -168,5 +170,8 @@ void scan_thread(void *data);
 
 //ip.c
 int			get_ip_addr(char *host, int ip_idx);
+
+// pcap_thread.c
+void setup_pcap(int *scan_bit);
 
 #endif

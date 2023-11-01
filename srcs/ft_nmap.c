@@ -29,7 +29,7 @@ int get_interface(void) {
 }
 
 void init_global(void) {
-    g_env.timeout = 5;
+    g_env.timeout = 2;
     g_env.src_port = 80;
     g_env.nb_port = 1024;
     g_env.port = (int*)malloc(sizeof(int)*g_env.nb_port);
@@ -97,10 +97,20 @@ void init_structs_global(void) {
         i++;
     }
     g_env.threads_availability = (bool *)malloc(sizeof(bool)*g_env.nb_threads);
+    if (g_env.threads_availability == NULL) {
+        error_exit("malloc failed threads_availability array", 1);
+    }
     for (int i = 0; i < g_env.nb_threads; i++) {
         g_env.threads_availability[i] = true;
     }
     g_env.scanner_threads = (pthread_t *)malloc(sizeof(pthread_t)*g_env.nb_threads);
+    if (g_env.scanner_threads == NULL) {
+        error_exit("malloc failed scanner_threads array", 1);
+    }
+    g_env.pcap_thread = (pthread_t*)malloc(sizeof(pthread_t));
+    if (g_env.pcap_thread == NULL) {
+        error_exit("malloc failed scanner_threads array", 1);
+    }
     printf("init struct ok\n");
 }
 
@@ -158,4 +168,6 @@ int main(int ac, char **av) {
     // display_results();
     // free_global();
     close(g_env.socket_fd);
+    pthread_mutex_destroy(&(g_env.launch_thread_m));
+    pthread_mutex_destroy(&(g_env.pcap_compile_m));
 }

@@ -7,6 +7,7 @@ SRCS =	ft_nmap.c		\
 		ft_strsplit.c	\
 		ft_strsub.c		\
 		loop.c			\
+		pcap_thread.c	\
 		configure.c		\
 		scan.c			\
 		ip.c

@@ -173,7 +173,9 @@ struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
 	pseudo.protocol = IPPROTO_TCP;
 	pseudo.len = htons(sizeof(struct tcphdr))/*+ 20*/;
 	char *pseudogram = malloc(sizeof(struct pseudo_header) + sizeof(struct tcphdr));
-
+	if (pseudogram==NULL) {
+		error_exit("malloc pseudogram tcp failed", 1);
+	}
 	memcpy(pseudogram, (char*)&pseudo, sizeof(struct pseudo_header));
 	memcpy(pseudogram + sizeof(struct pseudo_header), tcp, sizeof(struct tcphdr));
 
@@ -198,7 +200,9 @@ struct udphdr* configure_udp_header(char *buffer, int dst_port) {
 	pseudo.protocol = IPPROTO_UDP;
 	pseudo.len = htons(sizeof(struct udphdr))/*+ 20*/;
 	char *pseudogram = malloc(sizeof(struct pseudo_header) + sizeof(struct udphdr));
-
+	if (pseudogram==NULL) {
+		error_exit("malloc pseudogram udp failed", 1);
+	}
 	memcpy(pseudogram, (char*)&pseudo, sizeof(struct pseudo_header));
 	memcpy(pseudogram + sizeof(struct pseudo_header), udp, sizeof(struct udphdr));
 
