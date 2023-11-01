@@ -4,9 +4,29 @@
 void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     // This is the callback function that will be called for each captured packet.
     // You can process the packet data here.
-    (void)packet;
     (void)user;
-    printf("SYN Packet captured, length: %d\n", pkthdr->len);
+    // (void)packet;
+    (void)pkthdr;
+    printf("SYN Packet captured, ip packet length: %ld\n", sizeof(packet));
+    struct sll_header *sll = (struct sll_header *)packet;
+    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+    printf("sll size %ld\n", sizeof(sll));
+    printf("sll hatype 0x%x\n", ntohs(sll->sll_hatype));
+    printf("sll halen 0x%x\n", ntohs(sll->sll_halen));
+    printf("ip tot len 0x%x\n", ntohs(ip->tot_len));
+    for (int i = 0; i < 60 ; i+=1) {
+        printf("%02x ", packet[i]);
+        if (i==0) {
+            continue;
+        }
+        if ((i+2) % 8 == 0) {
+            printf(" ");
+        }
+        if ((i+2) % 16 == 0) {
+            printf("\n");
+        } 
+    }
+    printf("\n");
     // Add your packet processing code here
 }
 
@@ -83,7 +103,6 @@ char	*ft_strcat(char *s1, const char *s2)
 
 void pcap_thread(void *data) {
     int scan_bit = *(int*)data;
-    printf("pcap thread scan_bit %d\n", scan_bit);
 
     t_map_function map_function[NB_SCAN] = {
         {packet_handler_SYN},
@@ -107,10 +126,10 @@ void pcap_thread(void *data) {
     bpf_u_int32 net;
     bpf_u_int32 mask;
 
-    if (pcap_lookupnet(g_env.device, &net, &mask, errbuf) < 0) {
+    if (pcap_lookupnet("any", &net, &mask, errbuf) < 0) {
         error_exit("pcap_lookup: could not find network device", 1);
     }
-    g_env.handle = pcap_open_live(g_env.device, BUFSIZ, 1, 1000, errbuf);
+    g_env.handle = pcap_open_live("any", BUFSIZ, 1, 1000, errbuf);
     if (g_env.handle==NULL) {
         error_exit("pcap_open_live: could not open device", 1);
     }
@@ -143,7 +162,6 @@ void pcap_thread(void *data) {
             error_exit("error: pcap_dispatch failed", 1);
         }
         if (ret == -2) {
-            printf("BREAK LOOP\n");
             break ;
         }
     }

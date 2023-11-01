@@ -10,6 +10,7 @@
 # include <netinet/ip.h>
 # include <netinet/tcp.h>
 # include <netinet/udp.h>
+# include <net/ethernet.h>
 # include <netinet/ip_icmp.h>
 # include <netdb.h>
 # include <sys/time.h>
@@ -22,6 +23,7 @@
 # include <pthread.h>
 
 # include <pcap/pcap.h>
+# include <pcap/sll.h>
 
 # include <ifaddrs.h>
 # include <string.h>
