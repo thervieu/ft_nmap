@@ -8,13 +8,26 @@ void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     // (void)packet;
     (void)pkthdr;
     printf("SYN Packet captured, ip packet length: %ld\n", sizeof(packet));
-    struct sll_header *sll = (struct sll_header *)packet;
-    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-    printf("sll size %ld\n", sizeof(sll));
+//    struct sll_header *sll = (struct sll_header *)packet;
+//    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+/*    printf("sll size %ld\n", sizeof(sll));
     printf("sll hatype 0x%x\n", ntohs(sll->sll_hatype));
     printf("sll halen 0x%x\n", ntohs(sll->sll_halen));
     printf("ip tot len 0x%x\n", ntohs(ip->tot_len));
-    for (int i = 0; i < 60 ; i+=1) {
+	printf("ip prot 0x%x\n", ntohs(ip->protocol));*/
+	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
+    if (tcp->th_flags == (TH_SYN | TH_ACK)) { //maybe | with flags ?
+		printf("Port open\n");
+		//g_env.results[g_env.ite_ip].port_result[/*port_id*/].scan_results[/*scan_id*/] = OPEN;
+	}
+	else if ((tcp->th_flags & TH_RST) == TH_RST) {
+		printf("Port is close\n");
+	}
+	else {
+		printf("Unfiltered\n");
+    }
+	printf("\n");
+	/*for (int i = 0; i < 60 ; i+=1) {
         printf("%02x ", packet[i]);
         if (i==0) {
             continue;
@@ -25,8 +38,7 @@ void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
         if ((i+2) % 16 == 0) {
             printf("\n");
         } 
-    }
-    printf("\n");
+    }*/
     // Add your packet processing code here
 }
 
@@ -36,6 +48,14 @@ void packet_handler_NULL(unsigned char *user, const struct pcap_pkthdr *pkthdr, 
     (void)packet;
     (void)user;
     printf("NULL Packet captured, length: %d\n", pkthdr->len);
+  //  struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+	//printf("ip prot 0x%x\n", ntohs(ip->protocol));
+	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
+	if ((tcp->th_flags & TH_RST) == TH_RST)
+		printf("Port is close\n");
+	else
+		printf("Port is open\n");
+    printf("\n");
     // Add your packet processing code here
 }
 
@@ -45,6 +65,14 @@ void packet_handler_ACK(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     (void)packet;
     (void)user;
     printf("ACK Packet captured, length: %d\n", pkthdr->len);
+    //struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+	//printf("ip prot 0x%x\n", ntohs(ip->protocol));
+	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
+	if ((tcp->th_flags & TH_RST) == TH_RST)
+		printf("Port is Unfiltered\n");
+	else
+		printf("Port is Filtered\n");
+    printf("\n");
     // Add your packet processing code here
 }
 
@@ -54,6 +82,14 @@ void packet_handler_FIN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     (void)packet;
     (void)user;
     printf("FIN Packet captured, length: %d\n", pkthdr->len);
+    //struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+	//printf("ip prot 0x%x\n", ntohs(ip->protocol));
+	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
+	if ((tcp->th_flags & TH_RST) == TH_RST)
+		printf("Port is close\n");
+	else
+		printf("Port is open\n");
+    printf("\n");
     // Add your packet processing code here
 }
 
@@ -64,6 +100,14 @@ void packet_handler_XMAS(unsigned char *user, const struct pcap_pkthdr *pkthdr, 
     (void)packet;
     (void)user;
     printf("XMAS Packet captured, length: %d\n", pkthdr->len);
+    //struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+	//printf("ip prot 0x%x\n", ntohs(ip->protocol));
+	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
+	if ((tcp->th_flags & TH_RST) == TH_RST)
+		printf("Port is close\n");
+	else
+		printf("Port is open\n");
+    printf("\n");
     // Add your packet processing code here
 }
 
@@ -73,6 +117,12 @@ void packet_handler_UDP(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     (void)packet;
     (void)user;
     printf("UDP Packet captured, length: %d\n", pkthdr->len);
+    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+	if (ip->tot_len != 0)
+		printf("Open\n");
+	else
+		printf("Open|Filtered\n");
+	printf("\n");
     // Add your packet processing code here
 }
 
@@ -162,6 +212,7 @@ void pcap_thread(void *data) {
             error_exit("error: pcap_dispatch failed", 1);
         }
         if (ret == -2) {
+			printf("breakloop: No packets\n");
             break ;
         }
     }
