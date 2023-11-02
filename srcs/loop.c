@@ -102,8 +102,9 @@ t_scanner *init_scanner(int thread_id, int port_index, int scan_bit) {
     
     scanner->port_index = port_index;
     scanner->port = g_env.port[port_index];
+	//printf("Port %d\n", scanner->port);
     
-    scanner->scan_bit = scan_bit;
+	scanner->scan_bit = scan_bit;
     scanner->tcp_flags = scan_to_flags(1<<scan_bit);
     scanner->scan_type = 1<<scan_bit;
 
@@ -152,7 +153,7 @@ void scan_loop(void) {
     int scan_bit = 0;
     while (scan_bit < NB_SCAN) {
         if (g_env.scan>>scan_bit & 1) {
-            setup_pcap(&scan_bit);
+			setup_pcap(&scan_bit);
             pthread_mutex_lock(&(g_env.pcap_compile_m));
             pthread_mutex_unlock(&(g_env.pcap_compile_m));
             printf("llop\n");
@@ -172,11 +173,17 @@ void ip_loop(void) {
 
     configure_socket();
     
-    g_env.ite_ip = 0;  
+    g_env.ite_ip = 0;
+	struct timeval	tv1;
+	struct timeval	tv2;
+	gettimeofday(&tv1, NULL);
     while (g_env.ite_ip < g_env.nb_ips) {
         scan_loop();
         if (g_env.nb_threads)
             wait_for_all_threads();
         g_env.ite_ip++;
     }
+	gettimeofday(&tv2, NULL);
+	int		ret = tv2.tv_usec - tv1.tv_usec;
+	printf("Total time: %d.%d\n", tv2.tv_sec - tv1.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
 }

@@ -22,8 +22,13 @@ void scan(char *buf, t_scanner scanner, struct ip *ip) {
                     printf("thread %d: sendto failed errno: %s\n", scanner.thread_id, strerror(errno));
                     printf("poll revents %d\n", fds[0].revents);
                     // error_exit("sendto failed\n", 1);
-                }
-            }
+                }/*
+				char	rec_buf[256];
+				socklen_t lee = sizeof(struct sockaddr_in);
+				printf("Recv\n");
+				recvfrom(g_env.socket_fd, rec_buf, 256, 0, (struct sockaddr *)&g_env.ip_and_hosts[g_env.ite_ip].dst_addr, &lee);
+				printf("Done\n");*/
+			}
             else {
                 printf("poll revents %d\n", fds[0].revents);
             }

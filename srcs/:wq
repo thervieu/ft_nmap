@@ -164,33 +164,13 @@ Scanning..\n\
 
 void			display_open_ports(void) {
 	printf("Open ports:\n\
-Port     Service Name (if applicable) Results                              Conclusion\n");
-	for (int i = 0; i < 100; i++)
-		printf("-");
-	printf("\n");
+Port     Service Name (if applicable) Results                                   Conclusion\n");
 	for (int i = 0; i < g_env.nb_port; i++) {
-		int		is_opened = false;
-		//printf("Processing %d\n", g_env.results->ports_result[i].port);
 		for (int j = 0; j < g_env.nb_scans; j++) {
 			if (g_env.results->ports_result[i].scan_results[j].state == OPEN)
-				is_opened = true;//printf("Port %d is open\n", g_env.results->ports_result[i].port);
+				printf("Port %d is open\n", g_env.results->ports_result[i].port);
 		}
-		//if (is_opened) {
-			struct servent *serv;
-			if (!(serv = getservbyport(/*g_env.results->ports_result[i].port*/htons(80), "tcp")))
-			{
-				printf("Unassigned\n");
-			}
-			else {
-				printf("%s\n", serv->s_name);
-				for (int k = 0; serv->s_aliases[k]; k++) {
-					printf("%s\n", serv->s_aliases[k]);
-				}
-			}
-			//printf("%d        % 11s                  ", g_env.results->ports_result[i].port);
-		//}
 	}
-	printf("\n");
 }
 
 void			display_ports(void) {
