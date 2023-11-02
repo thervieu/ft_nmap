@@ -7,9 +7,6 @@ void error_exit(char *err, int code) {
     exit(code);
 }
 
-void usage(void) {
-    printf("usage: ft_nmap [options] ip_to_scan\n");
-}
 
 int get_interface(void) {
     char errbuf[PCAP_ERRBUF_SIZE];  // Error buffer
@@ -29,7 +26,7 @@ int get_interface(void) {
 }
 
 void init_global(void) {
-    g_env.timeout = 2;
+    g_env.timeout = 1;
     g_env.src_port = 80;
     g_env.nb_port = 1024;
     g_env.port = (int*)malloc(sizeof(int)*g_env.nb_port);
@@ -42,7 +39,7 @@ void init_global(void) {
         port++;
     }
 
-    g_env.nb_threads = 1; // set to 1 when doing parsing
+    g_env.nb_threads = 0;
 
     g_env.nb_ips = 0;
 
@@ -122,6 +119,13 @@ void init_structs_global(void) {
         }
         i++;
     }
+    g_env.pcap_thread = (pthread_t*)malloc(sizeof(pthread_t));
+    if (g_env.pcap_thread == NULL) {
+        error_exit("malloc failed scanner_threads array", 1);
+    }
+    if (g_env.nb_threads == 0) {
+        return ;
+    }
     g_env.threads_availability = (bool *)malloc(sizeof(bool)*g_env.nb_threads);
     if (g_env.threads_availability == NULL) {
         error_exit("malloc failed threads_availability array", 1);
@@ -131,10 +135,6 @@ void init_structs_global(void) {
     }
     g_env.scanner_threads = (pthread_t *)malloc(sizeof(pthread_t)*g_env.nb_threads);
     if (g_env.scanner_threads == NULL) {
-        error_exit("malloc failed scanner_threads array", 1);
-    }
-    g_env.pcap_thread = (pthread_t*)malloc(sizeof(pthread_t));
-    if (g_env.pcap_thread == NULL) {
         error_exit("malloc failed scanner_threads array", 1);
     }
     printf("init struct ok\n");
@@ -164,12 +164,13 @@ Scanning..\n\
 
 int main(int ac, char **av) {
     if (getuid() != 0) {
-        error_exit("Operation not permitted", 1);
+        display_help(av[0]);
+        error_exit("Operation not permitted\nPlease retry with root rights", 1);
     }
 	t_pars	data;
     if (ac < 2) {
-        usage();
-        error_exit(NULL, 255);
+        display_help(av[0]);
+        error_exit(NULL, 1);
     }
 	bzero(&data, sizeof(data));
     //default values

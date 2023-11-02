@@ -1,6 +1,6 @@
 #include "ft_nmap.h"
 
-static int		display_help(char *prog_name)
+int		display_help(char *prog_name)
 {
 	printf("Help Screen\n\
 %s [OPTIONS]\n\
@@ -157,13 +157,13 @@ static int		format_speedup(char *speedup)
 		return (0);
 	while (speedup[i]) {
 		if (is_digit(speedup[i]) == 0) {
-			printf("%s isn't a valid parameter for --speedup\n", speedup);
+			printf("%s isn't a valid parameter for --speedup. 0 to 250 only.\n", speedup);
 			return (-1);
 		}
 		i++;
 	}
 	if ((g_env.nb_threads = atoi(speedup)) > 250) {
-		printf("%d is too big for speedup (max 250)\n", g_env.nb_threads);
+		printf("%d is too big for speedup. 0 to 250 only.\n", g_env.nb_threads);
 		return (-1);
 	}
 	return (0);
@@ -282,9 +282,9 @@ static int		format_opt(t_pars *data)
 		return (-1);
 	if (data->scan)
 		print_scan(g_env.scan);
-	for (int i = 0; i < g_env.nb_ips; i++) {
-		printf("Printing %s\n\tcanon = %s\n\tinfo = %s\n\taddr = %s\n", g_env.ip_and_hosts[i].hostname, g_env.ip_and_hosts[i].canonname, g_env.ip_and_hosts[i].nameinfo, inet_ntoa(g_env.ip_and_hosts[i].ip));
-	}
+	// for (int i = 0; i < g_env.nb_ips; i++) {
+	// 	printf("Printing %s\n\tcanon = %s\n\tinfo = %s\n\taddr = %s\n", g_env.ip_and_hosts[i].hostname, g_env.ip_and_hosts[i].canonname, g_env.ip_and_hosts[i].nameinfo, inet_ntoa(g_env.ip_and_hosts[i].ip));
+	// }
 	return (0);
 }
 

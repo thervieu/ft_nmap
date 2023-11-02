@@ -109,7 +109,8 @@ t_scanner *init_scanner(int thread_id, int port_index, int scan_bit) {
 
     scanner->ip_str = g_env.ip_and_hosts[g_env.ite_ip].hostname;
 
-    g_env.threads_availability[thread_id] = false;
+    if (g_env.nb_threads)
+        g_env.threads_availability[thread_id] = false;
 
     return scanner;
 }
@@ -117,8 +118,13 @@ t_scanner *init_scanner(int thread_id, int port_index, int scan_bit) {
 void port_loop(int scan_bit) {
     int i = 0;
     while (i < g_env.nb_port) {
+        t_scanner *scanner = init_scanner(0, i, scan_bit);
+        if (g_env.nb_threads == 0) {
+            scan_thread((void*)scanner);
+            i++;
+            continue ;
+        }
         int thread_id = get_available_thread();
-        t_scanner *scanner = init_scanner(thread_id, i, scan_bit);
         if (pthread_create(&(g_env.scanner_threads[thread_id]), NULL, (void*)&scan_thread, (void*)scanner) != 0) {
             printf("thread %d failed\n", thread_id);
             error_exit("pthread_create failed", 1);
@@ -140,9 +146,6 @@ void wait_for_all_threads(void) {
         }
         pthread_mutex_unlock(&(g_env.launch_thread_m));
     }
-    if (pthread_join(*g_env.pcap_thread, NULL) < 0) {
-        error_exit("pthread_join failed", 1);
-    }
 }
 
 void scan_loop(void) {
@@ -152,22 +155,28 @@ void scan_loop(void) {
             setup_pcap(&scan_bit);
             pthread_mutex_lock(&(g_env.pcap_compile_m));
             pthread_mutex_unlock(&(g_env.pcap_compile_m));
+            printf("llop\n");
             port_loop(scan_bit);
-            wait_for_all_threads();
+            if (g_env.nb_threads)
+                wait_for_all_threads();
+
+            if (pthread_join(*g_env.pcap_thread, NULL) < 0) {
+                error_exit("pthread_join failed", 1);
+            }
         }
         scan_bit++;
     }
 }
 
 void ip_loop(void) {
-    // gettimeofday();
 
     configure_socket();
     
     g_env.ite_ip = 0;  
     while (g_env.ite_ip < g_env.nb_ips) {
         scan_loop();
-        wait_for_all_threads();
+        if (g_env.nb_threads)
+            wait_for_all_threads();
         g_env.ite_ip++;
     }
 }

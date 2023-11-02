@@ -34,7 +34,6 @@ $(OBJS_DIR)%.o : $(SRCS_DIR)%.c
 $(NAME): $(OBJS)
 	@gcc $(FLAGS) -I $(INC_DIR) -pthread -o $(NAME) $(OBJS) -lpcap
 	@echo "Exec ft_nmap created !"
-	@echo "usage: ./ft_nmap [equation]"
 
 all: $(NAME)
 

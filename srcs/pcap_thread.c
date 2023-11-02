@@ -179,7 +179,7 @@ void pcap_thread(void *data) {
     if (pcap_lookupnet("any", &net, &mask, errbuf) < 0) {
         error_exit("pcap_lookup: could not find network device", 1);
     }
-    g_env.handle = pcap_open_live("any", BUFSIZ, 1, 1000, errbuf);
+    g_env.handle = pcap_open_live("any", BUFSIZ, 1, 100, errbuf);
     if (g_env.handle==NULL) {
         error_exit("pcap_open_live: could not open device", 1);
     }
@@ -209,6 +209,7 @@ void pcap_thread(void *data) {
             printf("ret dispatch %d\n", ret);
         }
         if (ret == -1) {
+            printf("error: %s\n", strerror(errno));
             error_exit("error: pcap_dispatch failed", 1);
         }
         if (ret == -2) {
