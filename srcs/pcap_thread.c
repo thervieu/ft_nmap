@@ -14,9 +14,11 @@ void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     (void)pkthdr;
 
 	struct iphdr *ip = (struct iphdr*)(packet + sizeof(struct sll_header));
+
    if (ip->protocol == IPPROTO_TCP) {
 	    struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
         int port_index = port_to_port_index(htons(tcp->th_sport));
+
 	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
         if (tcp->th_flags == (TH_SYN | TH_ACK)) {
             g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = OPEN;
@@ -211,6 +213,7 @@ void pcap_thread(void *data) {
         }
         if (ret == -2) {
 			// printf("breakloop: No packets\n");
+
             break ;
         }
     }

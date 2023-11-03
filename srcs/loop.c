@@ -173,10 +173,12 @@ void ip_loop(void) {
     configure_socket();
     
     g_env.ite_ip = 0;
+
 	struct timeval	tv_beg_tot;
 	struct timeval	tv_beg;
 	struct timeval	tv_end;
 	gettimeofday(&tv_beg_tot, NULL);
+
     while (g_env.ite_ip < g_env.nb_ips) {
         if (g_env.ip_and_hosts[g_env.ite_ip].unknown == true) {
             printf("########################################################################\n\n");
@@ -211,4 +213,5 @@ void ip_loop(void) {
 	int		ret = tv_end.tv_usec - tv_beg_tot.tv_usec;
     if (g_env.nb_ips!=1)
 	    printf("Total time: %ld.%d\n", tv_end.tv_sec - tv_beg_tot.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
+
 }

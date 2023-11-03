@@ -283,8 +283,10 @@ static int		format_opt(t_pars *data)
 		return (-1);
 	if (data->scan && format_scan(data->scan) == -1)
 		return (-1);
+
 	// if (data->scan)
 	// 	print_scan(g_env.scan);
+
 	// for (int i = 0; i < g_env.nb_ips; i++) {
 	// 	printf("Printing %s\n\tcanon = %s\n\tinfo = %s\n\taddr = %s\n", g_env.ip_and_hosts[i].hostname, g_env.ip_and_hosts[i].canonname, g_env.ip_and_hosts[i].nameinfo, inet_ntoa(g_env.ip_and_hosts[i].ip));
 	// }

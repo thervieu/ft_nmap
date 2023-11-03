@@ -172,8 +172,10 @@ size_t ft_stlren(char *str) {
     return len;
 }
 
+
 int			display_ports(bool openness) {
     int openness_ports;
+
 	printf("%s ports:\n\
  Port       Service Name        Results                       Conclusion\n", openness ? "Open" : "Closed");
 	for (int i = 0; i < 100; i++)
@@ -191,6 +193,7 @@ int			display_ports(bool openness) {
     };
 	for (int i = 0; i < g_env.nb_port; i++) {
 		int		is_opened = false;
+
 		//printf("Processing %d\n", g_env.results[g_env.ite_ip].ports_result[i].port);
 		for (int j = 0; j < g_env.nb_scans; j++) {
 			if (g_env.results[g_env.ite_ip].ports_result[i].scan_results[j].state == OPEN)
@@ -207,7 +210,7 @@ int			display_ports(bool openness) {
             int written = 0;
             for (int k = 0; k < NB_SCAN; k++) {
                 if ((1<<k&g_env.scan)==0) continue;
-                char *state = states[g_env.results[g_env.ite_ip].ports_result[i].scan_results[g_env.scan_bit_to_index[k]].state];
+
                 
                 printed++;
                 if (printed==4) {
@@ -247,6 +250,7 @@ int			display_ports(bool openness) {
     return openness_ports;
 }
 
+
 int main(int ac, char **av) {
     if (getuid() != 0) {
         display_help(av[0]);
@@ -277,7 +281,9 @@ int main(int ac, char **av) {
     // parse_args();
     // display_header();
     ip_loop(); // (all threads creation/deletion should be done here)
-    // display()
+
+    display_ports(true);
+    display_ports(false);
     // free_global();
     close(g_env.socket_fd);
     pthread_mutex_destroy(&(g_env.launch_thread_m));
