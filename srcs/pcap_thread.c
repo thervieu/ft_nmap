@@ -1,5 +1,14 @@
 #include "../incs/ft_nmap.h"
 
+int port_to_port_index(int port) {
+    for (int i = 0; i < g_env.nb_port; i++) {
+        printf("%d %d\n", port, g_env.port[i]);
+        if (port == g_env.port[i]) {
+            return i;
+        }
+    }
+    return -1;
+}
 
 void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     // This is the callback function that will be called for each captured packet.
@@ -17,16 +26,19 @@ void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     printf("ip tot len 0x%x\n", ntohs(ip->tot_len));
 	printf("ip prot 0x%x\n", ntohs(ip->protocol));*/
 	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
-//	g_env.results[g_env.ite_ip].ports_result[/*which port*/].port = tcp->s_port;
+    int port_index = port_to_port_index(htons(tcp->th_sport));
+	g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
     printf("Recept for %d\n", htons(tcp->th_sport));
+    printf("g_env scan bit to index SYN %d\n", g_env.scan_bit_to_index[0]);
+    printf("portindex %d\n", port_index);
 	if (tcp->th_flags == (TH_SYN | TH_ACK)) { //maybe | with flags ?
-		printf("Port open\n");
+	    g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = OPEN;
 	}
 	else if ((tcp->th_flags & TH_RST) == TH_RST) {
-		printf("Port is close\n");
+	    g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = CLOSE;
 	}
 	else {
-		printf("Unfiltered\n");
+	    g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = UNFILTERED;
     }
 	printf("\n");
 	/*for (int i = 0; i < 60 ; i+=1) {
@@ -55,6 +67,7 @@ void packet_handler_NULL(unsigned char *user, const struct pcap_pkthdr *pkthdr, 
   //  struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
 	//printf("ip prot 0x%x\n", ntohs(ip->protocol));
 	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
+    // int port_index = port_to_port_index(tcp->th_sport);
 	if ((tcp->th_flags & TH_RST) == TH_RST)
 		printf("Port is close\n");
 	else

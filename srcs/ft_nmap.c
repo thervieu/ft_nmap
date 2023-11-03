@@ -162,12 +162,30 @@ Scanning..\n\
 ........\n", g_env.nb_threads);
 }
 
+size_t ft_stlren(char *str) {
+    size_t len = 0;
+    while (str[len]) {
+        len++;
+    }
+    return len;
+}
+
 void			display_open_ports(void) {
 	printf("Open ports:\n\
-Port     Service Name (if applicable) Results                              Conclusion\n");
+ Port     Service Name        Results                       Conclusion\n");
 	for (int i = 0; i < 100; i++)
 		printf("-");
 	printf("\n");
+
+    char *states[7] = {
+        "U",
+        "O",
+        "C",
+        "",
+        "F",
+        "O|F",
+        "C|F",
+    };
 	for (int i = 0; i < g_env.nb_port; i++) {
 		int		is_opened = false;
 		//printf("Processing %d\n", g_env.results->ports_result[i].port);
@@ -175,20 +193,52 @@ Port     Service Name (if applicable) Results                              Concl
 			if (g_env.results->ports_result[i].scan_results[j].state == OPEN)
 				is_opened = true;//printf("Port %d is open\n", g_env.results->ports_result[i].port);
 		}
-		//if (is_opened) {
+		if (is_opened) {
 			struct servent *serv;
-			if (!(serv = getservbyport(/*g_env.results->ports_result[i].port*/htons(80), "tcp")))
+			if (!(serv = getservbyport(htons(g_env.results->ports_result[i].port), "tcp")))
 			{
 				printf("Unassigned\n");
 			}
-			else {
-				printf("%s\n", serv->s_name);
-				for (int k = 0; serv->s_aliases[k]; k++) {
-					printf("%s\n", serv->s_aliases[k]);
-				}
-			}
-			//printf("%d        % 11s                  ", g_env.results->ports_result[i].port);
-		//}
+            int printed = 0;
+			printf("%*d%*s        ", 5, g_env.results->ports_result[i].port, 17, serv->s_name);
+            int written = 0;
+            for (int k = 0; k < NB_SCAN; k++) {
+                if ((1<<k&g_env.scan)==0) continue;
+                char *state = states[g_env.results->ports_result[i].scan_results[g_env.scan_bit_to_index[k]].state];
+                
+                printed++;
+                if (printed==4) {
+                    printf("\n%*s", 30, "");
+                    written = 0;
+                }
+
+                written += 6;
+                written += ft_stlren(state);
+                switch (k) {
+                    case 0:
+                        printf("SYN(%s) ", state);
+                        break;
+                    case 1:
+                        printf("NULL(%s) ", state);
+                        written++;
+                        break;
+                    case 2:
+                        printf("ACK(%s) ", state);
+                        break;
+                    case 3:
+                        printf("FIN(%s) ", state);
+                        break;
+                    case 4:
+                        printf("XMAS(%s) ", state);
+                        written++;
+                        break;
+                    case 5:
+                        printf("UDP(%s) ", state);
+                        break;
+                }
+            }
+            printf("%*s\n", 40 - written, "OPEN");
+		}
 	}
 	printf("\n");
 }

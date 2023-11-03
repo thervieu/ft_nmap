@@ -185,5 +185,5 @@ void ip_loop(void) {
     }
 	gettimeofday(&tv2, NULL);
 	int		ret = tv2.tv_usec - tv1.tv_usec;
-	printf("Total time: %d.%d\n", tv2.tv_sec - tv1.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
+	printf("Total time: %ld.%d\n", tv2.tv_sec - tv1.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
 }
