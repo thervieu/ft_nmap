@@ -7,9 +7,6 @@ void error_exit(char *err, int code) {
     exit(code);
 }
 
-void usage(void) {
-    printf("usage: ft_nmap [options] ip_to_scan\n");
-}
 
 int get_interface(void) {
     char errbuf[PCAP_ERRBUF_SIZE];  // Error buffer
@@ -29,7 +26,7 @@ int get_interface(void) {
 }
 
 void init_global(void) {
-    g_env.timeout = 2;
+    g_env.timeout = 1;
     g_env.src_port = 80;
     g_env.nb_port = 1024;
     g_env.port = (int*)malloc(sizeof(int)*g_env.nb_port);
@@ -42,7 +39,7 @@ void init_global(void) {
         port++;
     }
 
-    g_env.nb_threads = 1; // set to 1 when doing parsing
+    g_env.nb_threads = 0;
 
     g_env.nb_ips = 0;
 
@@ -122,6 +119,13 @@ void init_structs_global(void) {
         }
         i++;
     }
+    g_env.pcap_thread = (pthread_t*)malloc(sizeof(pthread_t));
+    if (g_env.pcap_thread == NULL) {
+        error_exit("malloc failed scanner_threads array", 1);
+    }
+    if (g_env.nb_threads == 0) {
+        return ;
+    }
     g_env.threads_availability = (bool *)malloc(sizeof(bool)*g_env.nb_threads);
     if (g_env.threads_availability == NULL) {
         error_exit("malloc failed threads_availability array", 1);
@@ -131,10 +135,6 @@ void init_structs_global(void) {
     }
     g_env.scanner_threads = (pthread_t *)malloc(sizeof(pthread_t)*g_env.nb_threads);
     if (g_env.scanner_threads == NULL) {
-        error_exit("malloc failed scanner_threads array", 1);
-    }
-    g_env.pcap_thread = (pthread_t*)malloc(sizeof(pthread_t));
-    if (g_env.pcap_thread == NULL) {
         error_exit("malloc failed scanner_threads array", 1);
     }
     printf("init struct ok\n");
@@ -162,14 +162,96 @@ Scanning..\n\
 ........\n", g_env.nb_threads);
 }
 
+size_t ft_stlren(char *str) {
+    size_t len = 0;
+    while (str[len]) {
+        len++;
+    }
+    return len;
+}
+
+void			display_ports(bool openness) {
+	printf("%s ports:\n\
+ Port       Service Name        Results                       Conclusion\n", openness ? "Open" : "Closed");
+	for (int i = 0; i < 100; i++)
+		printf("-");
+	printf("\n");
+
+    char *states[7] = {
+        "U",
+        "O",
+        "C",
+        "",
+        "F",
+        "O|F",
+        "C|F",
+    };
+	for (int i = 0; i < g_env.nb_port; i++) {
+		int		is_opened = false;
+		//printf("Processing %d\n", g_env.results->ports_result[i].port);
+		for (int j = 0; j < g_env.nb_scans; j++) {
+			if (g_env.results->ports_result[i].scan_results[j].state == OPEN)
+				is_opened = true;//printf("Port %d is open\n", g_env.results->ports_result[i].port);
+		}
+		if (is_opened==openness) {
+			struct servent *serv;
+			serv = getservbyport(htons(g_env.results->ports_result[i].port), NULL);
+			// if (!serv) serv = getservbyport(htons(g_env.results->ports_result[i].port), "udp");
+			// if (!serv) serv = getservbyport(htons(g_env.results->ports_result[i].port), "udp");
+            int printed = 0;
+			printf("%*d%*s        ", 5, g_env.results->ports_result[i].port, 19, serv ? serv->s_name : "Unassigned");
+            int written = 0;
+            for (int k = 0; k < NB_SCAN; k++) {
+                if ((1<<k&g_env.scan)==0) continue;
+                char *state = states[g_env.results->ports_result[i].scan_results[g_env.scan_bit_to_index[k]].state];
+                
+                printed++;
+                if (printed==4) {
+                    printf("\n%*s", 30, "");
+                    written = 0;
+                }
+
+                written += 6;
+                written += ft_stlren(state);
+                switch (k) {
+                    case 0:
+                        printf("SYN(%s) ", state);
+                        break;
+                    case 1:
+                        printf("NULL(%s) ", state);
+                        written++;
+                        break;
+                    case 2:
+                        printf("ACK(%s) ", state);
+                        break;
+                    case 3:
+                        printf("FIN(%s) ", state);
+                        break;
+                    case 4:
+                        printf("XMAS(%s) ", state);
+                        written++;
+                        break;
+                    case 5:
+                        printf("UDP(%s) ", state);
+                        break;
+                }
+            }
+            printf("%*s\n", 40 - written, openness ? "Open" : "Closed");
+		}
+	}
+	printf("\n");
+}
+
+
 int main(int ac, char **av) {
     if (getuid() != 0) {
-        error_exit("Operation not permitted", 1);
+        display_help(av[0]);
+        error_exit("Operation not permitted\nPlease retry with root rights", 1);
     }
 	t_pars	data;
     if (ac < 2) {
-        usage();
-        error_exit(NULL, 255);
+        display_help(av[0]);
+        error_exit(NULL, 1);
     }
 	bzero(&data, sizeof(data));
     //default values
@@ -191,7 +273,8 @@ int main(int ac, char **av) {
     // parse_args();
     // display_header();
     ip_loop(); // (all threads creation/deletion should be done here)
-    // display_results();
+    display_ports(true);
+    display_ports(false);
     // free_global();
     close(g_env.socket_fd);
     pthread_mutex_destroy(&(g_env.launch_thread_m));

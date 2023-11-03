@@ -102,14 +102,16 @@ t_scanner *init_scanner(int thread_id, int port_index, int scan_bit) {
     
     scanner->port_index = port_index;
     scanner->port = g_env.port[port_index];
+	//printf("Port %d\n", scanner->port);
     
-    scanner->scan_bit = scan_bit;
+	scanner->scan_bit = scan_bit;
     scanner->tcp_flags = scan_to_flags(1<<scan_bit);
     scanner->scan_type = 1<<scan_bit;
 
     scanner->ip_str = g_env.ip_and_hosts[g_env.ite_ip].hostname;
 
-    g_env.threads_availability[thread_id] = false;
+    if (g_env.nb_threads)
+        g_env.threads_availability[thread_id] = false;
 
     return scanner;
 }
@@ -117,8 +119,13 @@ t_scanner *init_scanner(int thread_id, int port_index, int scan_bit) {
 void port_loop(int scan_bit) {
     int i = 0;
     while (i < g_env.nb_port) {
+        t_scanner *scanner = init_scanner(0, i, scan_bit);
+        if (g_env.nb_threads == 0) {
+            scan_thread((void*)scanner);
+            i++;
+            continue ;
+        }
         int thread_id = get_available_thread();
-        t_scanner *scanner = init_scanner(thread_id, i, scan_bit);
         if (pthread_create(&(g_env.scanner_threads[thread_id]), NULL, (void*)&scan_thread, (void*)scanner) != 0) {
             printf("thread %d failed\n", thread_id);
             error_exit("pthread_create failed", 1);
@@ -140,34 +147,42 @@ void wait_for_all_threads(void) {
         }
         pthread_mutex_unlock(&(g_env.launch_thread_m));
     }
-    if (pthread_join(*g_env.pcap_thread, NULL) < 0) {
-        error_exit("pthread_join failed", 1);
-    }
 }
 
 void scan_loop(void) {
     int scan_bit = 0;
     while (scan_bit < NB_SCAN) {
         if (g_env.scan>>scan_bit & 1) {
-            setup_pcap(&scan_bit);
+			setup_pcap(&scan_bit);
             pthread_mutex_lock(&(g_env.pcap_compile_m));
             pthread_mutex_unlock(&(g_env.pcap_compile_m));
             port_loop(scan_bit);
-            wait_for_all_threads();
+            if (g_env.nb_threads)
+                wait_for_all_threads();
+
+            if (pthread_join(*g_env.pcap_thread, NULL) < 0) {
+                error_exit("pthread_join failed", 1);
+            }
         }
         scan_bit++;
     }
 }
 
 void ip_loop(void) {
-    // gettimeofday();
 
     configure_socket();
     
-    g_env.ite_ip = 0;  
+    g_env.ite_ip = 0;
+	struct timeval	tv1;
+	struct timeval	tv2;
+	gettimeofday(&tv1, NULL);
     while (g_env.ite_ip < g_env.nb_ips) {
         scan_loop();
-        wait_for_all_threads();
+        if (g_env.nb_threads)
+            wait_for_all_threads();
         g_env.ite_ip++;
     }
+	gettimeofday(&tv2, NULL);
+	int		ret = tv2.tv_usec - tv1.tv_usec;
+	printf("Total time: %ld.%d\n", tv2.tv_sec - tv1.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
 }

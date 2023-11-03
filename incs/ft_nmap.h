@@ -170,6 +170,7 @@ int			parser(int ac, char **av, t_pars *data);
 char		**ft_strsplit(char const *s, char c);
 char	*ft_strsub(char const *s, unsigned int start, size_t len);
 void	print_scan(int scan);
+int		display_help(char *prog_name);
 
 // loop.c
 void ip_loop(void);
