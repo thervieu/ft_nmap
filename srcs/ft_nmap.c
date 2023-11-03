@@ -218,6 +218,8 @@ int			display_ports(bool openness) {
                     written = 0;
                 }
 
+                char *state = states[g_env.results[g_env.ite_ip].ports_result[i].scan_results[g_env.scan_bit_to_index[k]].state];
+
                 written += 6;
                 written += ft_stlren(state);
                 switch (k) {
@@ -282,8 +284,6 @@ int main(int ac, char **av) {
     // display_header();
     ip_loop(); // (all threads creation/deletion should be done here)
 
-    display_ports(true);
-    display_ports(false);
     // free_global();
     close(g_env.socket_fd);
     pthread_mutex_destroy(&(g_env.launch_thread_m));

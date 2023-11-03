@@ -202,6 +202,7 @@ void ip_loop(void) {
             printf("Scan took %ld.%d secs\n\n", tv_end.tv_sec - tv_beg.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
         }
         int open_ports_nb = display_ports(true);
+        printf("%d %d\n", g_env.nb_port, open_ports_nb);
         if (g_env.nb_port - open_ports_nb <= 26) {
             display_ports(false);
         }
