@@ -14,7 +14,7 @@ static int		lookup_host(char *host, int ip_idx)
 	hints.ai_flags = AI_CANONNAME;
 	if (getaddrinfo(host, NULL, &hints, &res) != 0)
 	{
-		printf("./ft_nmap: %s: No address associated with hostname\n", host);
+		printf("./ft_nmap: warning: No address associated with hostname %s\n", host);
 		return (-1);
 	}
 	dst = (*(struct sockaddr_in *)res->ai_addr);

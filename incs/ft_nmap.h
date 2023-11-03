@@ -77,6 +77,7 @@ typedef struct	s_network {
 	char		*hostname;
 	char		*nameinfo;
 	char		*canonname;
+    bool        unknown;
 	t_addr		ip;
 	struct sockaddr_in	dst_addr;
 }				t_network;
@@ -164,6 +165,7 @@ extern t_env g_env;
 // ft_nmap.c
 void error_exit(char *err, int code);
 char	*ft_strdup(const char *str);
+int     display_ports(bool openness);
 
 // parsing
 int			parser(int ac, char **av, t_pars *data);
