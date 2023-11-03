@@ -14,13 +14,9 @@ void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     (void)pkthdr;
 
 	struct iphdr *ip = (struct iphdr*)(packet + sizeof(struct sll_header));
-    printf("proto %d %d", ip->protocol, IPPROTO_TCP);
    if (ip->protocol == IPPROTO_TCP) {
 	    struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
         int port_index = port_to_port_index(htons(tcp->th_sport));
-        printf("port %d\n", htons(tcp->th_sport));
-        printf("port index %d\n", port_index);
-        printf("thflags 0x%x\n", tcp->th_flags);
 	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
         if (tcp->th_flags == (TH_SYN | TH_ACK)) {
             g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = OPEN;
@@ -29,7 +25,6 @@ void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
             g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = CLOSE;
         }
    }
-	printf("\n");
 
 }
 
@@ -207,15 +202,15 @@ void pcap_thread(void *data) {
     pthread_mutex_unlock(&(g_env.pcap_compile_m));
     while (true) {
 	    int ret = pcap_dispatch(g_env.handle, -1, map_function[scan_bit].callback_function, (unsigned char *)&a);
-        if (ret >= 0) {
-            printf("ret dispatch %d\n", ret);
-        }
+        // if (ret >= 0) {
+        //     printf("ret dispatch %d\n", ret);
+        // }
         if (ret == -1) {
             printf("error: %s\n", strerror(errno));
             error_exit("error: pcap_dispatch failed", 1);
         }
         if (ret == -2) {
-			printf("breakloop: No packets\n");
+			// printf("breakloop: No packets\n");
             break ;
         }
     }

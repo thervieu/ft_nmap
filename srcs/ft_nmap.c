@@ -145,7 +145,9 @@ t_env g_env;
 static void		display_ips(void)
 {
 	for (int i = 0; i < g_env.nb_ips; i++) {
-		printf("%s ", inet_ntoa(g_env.ip_and_hosts[i].ip));
+        if (g_env.ip_and_hosts[i].unknown==false) {
+		    printf("%s ", inet_ntoa(g_env.ip_and_hosts[i].ip));
+        }
 	}
 	printf("\n");
 }
@@ -170,7 +172,8 @@ size_t ft_stlren(char *str) {
     return len;
 }
 
-void			display_ports(bool openness) {
+int			display_ports(bool openness) {
+    int openness_ports;
 	printf("%s ports:\n\
  Port       Service Name        Results                       Conclusion\n", openness ? "Open" : "Closed");
 	for (int i = 0; i < 100; i++)
@@ -188,22 +191,23 @@ void			display_ports(bool openness) {
     };
 	for (int i = 0; i < g_env.nb_port; i++) {
 		int		is_opened = false;
-		//printf("Processing %d\n", g_env.results->ports_result[i].port);
+		//printf("Processing %d\n", g_env.results[g_env.ite_ip].ports_result[i].port);
 		for (int j = 0; j < g_env.nb_scans; j++) {
-			if (g_env.results->ports_result[i].scan_results[j].state == OPEN)
-				is_opened = true;//printf("Port %d is open\n", g_env.results->ports_result[i].port);
+			if (g_env.results[g_env.ite_ip].ports_result[i].scan_results[j].state == OPEN)
+				is_opened = true;//printf("Port %d is open\n", g_env.results[g_env.ite_ip].ports_result[i].port);
 		}
 		if (is_opened==openness) {
+            openness_ports++;
 			struct servent *serv;
-			serv = getservbyport(htons(g_env.results->ports_result[i].port), NULL);
-			// if (!serv) serv = getservbyport(htons(g_env.results->ports_result[i].port), "udp");
-			// if (!serv) serv = getservbyport(htons(g_env.results->ports_result[i].port), "udp");
+			serv = getservbyport(htons(g_env.results[g_env.ite_ip].ports_result[i].port), NULL);
+			// if (!serv) serv = getservbyport(htons(g_env.results[g_env.ite_ip].ports_result[i].port), "udp");
+			// if (!serv) serv = getservbyport(htons(g_env.results[g_env.ite_ip].ports_result[i].port), "udp");
             int printed = 0;
-			printf("%*d%*s        ", 5, g_env.results->ports_result[i].port, 19, serv ? serv->s_name : "Unassigned");
+			printf("%*d%*s        ", 5, g_env.results[g_env.ite_ip].ports_result[i].port, 19, serv ? serv->s_name : "Unassigned");
             int written = 0;
             for (int k = 0; k < NB_SCAN; k++) {
                 if ((1<<k&g_env.scan)==0) continue;
-                char *state = states[g_env.results->ports_result[i].scan_results[g_env.scan_bit_to_index[k]].state];
+                char *state = states[g_env.results[g_env.ite_ip].ports_result[i].scan_results[g_env.scan_bit_to_index[k]].state];
                 
                 printed++;
                 if (printed==4) {
@@ -240,8 +244,8 @@ void			display_ports(bool openness) {
 		}
 	}
 	printf("\n");
+    return openness_ports;
 }
-
 
 int main(int ac, char **av) {
     if (getuid() != 0) {
@@ -266,15 +270,14 @@ int main(int ac, char **av) {
     pthread_mutex_init(&(g_env.pcap_compile_m), NULL);
     init_structs_global();
 	// Q: peut etre le bouger dans ip loop ?
-	display_nmap();
+    display_nmap();
     // Q: que faire quand on a pas de thread (speedup = 0) ? Faire une fonction à part semble plus simple
     // Q: nmap sort les ports dans l'ordre décroissant... Comment faire ça facilement avec la globale ?
     // -> on peut faire un g_env->result_ip[nb_ip]->result_ports[1024 ou taille de max_port - min_port]
     // parse_args();
     // display_header();
     ip_loop(); // (all threads creation/deletion should be done here)
-    display_ports(true);
-    display_ports(false);
+    // display()
     // free_global();
     close(g_env.socket_fd);
     pthread_mutex_destroy(&(g_env.launch_thread_m));

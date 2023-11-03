@@ -248,11 +248,13 @@ static int		format_file(char *file)
 	if (g_env.ip_and_hosts == NULL) {
 		error_exit("malloc ip_and_hosts failed", 1);
 	}
-	printf("\n");
 	for (int i = 0; i < g_env.nb_ips; i++)
 	{
 		g_env.ip_and_hosts[i].hostname = hosts[i];
-		get_ip_addr(hosts[i], i);
+		g_env.ip_and_hosts[i].unknown = false;
+		if (get_ip_addr(hosts[i], i) == -1) {
+			g_env.ip_and_hosts[i].unknown = true;
+		}
 	}
 	return (0);
 }
@@ -264,6 +266,7 @@ static int		format_ip(char *ip)
 	if (get_ip_addr(ip, 0) == -1)
 		return (-1);
 	g_env.ip_and_hosts[0].hostname = ip;
+	g_env.ip_and_hosts[0].unknown = false;
 	return (0);
 }
 
@@ -280,8 +283,8 @@ static int		format_opt(t_pars *data)
 		return (-1);
 	if (data->scan && format_scan(data->scan) == -1)
 		return (-1);
-	if (data->scan)
-		print_scan(g_env.scan);
+	// if (data->scan)
+	// 	print_scan(g_env.scan);
 	// for (int i = 0; i < g_env.nb_ips; i++) {
 	// 	printf("Printing %s\n\tcanon = %s\n\tinfo = %s\n\taddr = %s\n", g_env.ip_and_hosts[i].hostname, g_env.ip_and_hosts[i].canonname, g_env.ip_and_hosts[i].nameinfo, inet_ntoa(g_env.ip_and_hosts[i].ip));
 	// }
