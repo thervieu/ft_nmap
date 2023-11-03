@@ -156,7 +156,6 @@ void scan_loop(void) {
 			setup_pcap(&scan_bit);
             pthread_mutex_lock(&(g_env.pcap_compile_m));
             pthread_mutex_unlock(&(g_env.pcap_compile_m));
-            printf("llop\n");
             port_loop(scan_bit);
             if (g_env.nb_threads)
                 wait_for_all_threads();

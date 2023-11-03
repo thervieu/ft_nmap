@@ -170,9 +170,9 @@ size_t ft_stlren(char *str) {
     return len;
 }
 
-void			display_open_ports(void) {
-	printf("Open ports:\n\
- Port     Service Name        Results                       Conclusion\n");
+void			display_ports(bool openness) {
+	printf("%s ports:\n\
+ Port       Service Name        Results                       Conclusion\n", openness ? "Open" : "Closed");
 	for (int i = 0; i < 100; i++)
 		printf("-");
 	printf("\n");
@@ -193,14 +193,13 @@ void			display_open_ports(void) {
 			if (g_env.results->ports_result[i].scan_results[j].state == OPEN)
 				is_opened = true;//printf("Port %d is open\n", g_env.results->ports_result[i].port);
 		}
-		if (is_opened) {
+		if (is_opened==openness) {
 			struct servent *serv;
-			if (!(serv = getservbyport(htons(g_env.results->ports_result[i].port), "tcp")))
-			{
-				printf("Unassigned\n");
-			}
+			serv = getservbyport(htons(g_env.results->ports_result[i].port), NULL);
+			// if (!serv) serv = getservbyport(htons(g_env.results->ports_result[i].port), "udp");
+			// if (!serv) serv = getservbyport(htons(g_env.results->ports_result[i].port), "udp");
             int printed = 0;
-			printf("%*d%*s        ", 5, g_env.results->ports_result[i].port, 17, serv->s_name);
+			printf("%*d%*s        ", 5, g_env.results->ports_result[i].port, 19, serv ? serv->s_name : "Unassigned");
             int written = 0;
             for (int k = 0; k < NB_SCAN; k++) {
                 if ((1<<k&g_env.scan)==0) continue;
@@ -237,15 +236,12 @@ void			display_open_ports(void) {
                         break;
                 }
             }
-            printf("%*s\n", 40 - written, "OPEN");
+            printf("%*s\n", 40 - written, openness ? "Open" : "Closed");
 		}
 	}
 	printf("\n");
 }
 
-void			display_ports(void) {
-	display_open_ports();
-}
 
 int main(int ac, char **av) {
     if (getuid() != 0) {
@@ -277,8 +273,8 @@ int main(int ac, char **av) {
     // parse_args();
     // display_header();
     ip_loop(); // (all threads creation/deletion should be done here)
-    display_ports();
-	// display_results();
+    display_ports(true);
+    display_ports(false);
     // free_global();
     close(g_env.socket_fd);
     pthread_mutex_destroy(&(g_env.launch_thread_m));

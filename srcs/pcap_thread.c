@@ -2,7 +2,6 @@
 
 int port_to_port_index(int port) {
     for (int i = 0; i < g_env.nb_port; i++) {
-        printf("%d %d\n", port, g_env.port[i]);
         if (port == g_env.port[i]) {
             return i;
         }
@@ -11,155 +10,122 @@ int port_to_port_index(int port) {
 }
 
 void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
-    // This is the callback function that will be called for each captured packet.
-    // You can process the packet data here.
     (void)user;
-    // (void)packet;
     (void)pkthdr;
-    printf("SYN Packet captured, ip packet length: %ld\n", sizeof(packet));
-//    struct sll_header *sll = (struct sll_header *)packet;
-    //struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-	//printf("ip_p = %d %d\n", ip->protocol, IPPROTO_TCP);
-/*    printf("sll size %ld\n", sizeof(sll));
-    printf("sll hatype 0x%x\n", ntohs(sll->sll_hatype));
-    printf("sll halen 0x%x\n", ntohs(sll->sll_halen));
-    printf("ip tot len 0x%x\n", ntohs(ip->tot_len));
-	printf("ip prot 0x%x\n", ntohs(ip->protocol));*/
-	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
-    int port_index = port_to_port_index(htons(tcp->th_sport));
-	g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
-    printf("Recept for %d\n", htons(tcp->th_sport));
-    printf("g_env scan bit to index SYN %d\n", g_env.scan_bit_to_index[0]);
-    printf("portindex %d\n", port_index);
-	if (tcp->th_flags == (TH_SYN | TH_ACK)) { //maybe | with flags ?
-	    g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = OPEN;
-	}
-	else if ((tcp->th_flags & TH_RST) == TH_RST) {
-	    g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = CLOSE;
-	}
-	else {
-	    g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = UNFILTERED;
-    }
+
+	struct iphdr *ip = (struct iphdr*)(packet + sizeof(struct sll_header));
+    printf("proto %d %d", ip->protocol, IPPROTO_TCP);
+   if (ip->protocol == IPPROTO_TCP) {
+	    struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
+        int port_index = port_to_port_index(htons(tcp->th_sport));
+        printf("port %d\n", htons(tcp->th_sport));
+        printf("port index %d\n", port_index);
+        printf("thflags 0x%x\n", tcp->th_flags);
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+        if (tcp->th_flags == (TH_SYN | TH_ACK)) {
+            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = OPEN;
+        }
+        else if ((tcp->th_flags & TH_RST) == TH_RST) {
+            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = CLOSE;
+        }
+   }
 	printf("\n");
-	/*for (int i = 0; i < 60 ; i+=1) {
-        printf("%02x ", packet[i]);
-        if (i==0) {
-            continue;
-        }
-        if ((i+2) % 8 == 0) {
-            printf(" ");
-        }
-        if ((i+2) % 16 == 0) {
-            printf("\n");
-        } 
-    }*/
-    // Add your packet processing code here
+
 }
 
 void packet_handler_NULL(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
-    // This is the callback function that will be called for each captured packet.
-    // You can process the packet data here.
-    (void)packet;
     (void)user;
-    printf("NULL Packet captured, length: %d\n", pkthdr->len);
-    //struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-	//printf("ip_p = %d %d\n", ip->protocol, IPPROTO_ICMP);
-  //  struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-	//printf("ip prot 0x%x\n", ntohs(ip->protocol));
-	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
-    // int port_index = port_to_port_index(tcp->th_sport);
-	if ((tcp->th_flags & TH_RST) == TH_RST)
-		printf("Port is close\n");
-	else
-		printf("Port is open\n");
-    printf("\n");
-/*	for (int i = 0; i < 60 ; i+=1) {
-        printf("%02x ", packet[i]);
-        if (i==0) {
-            continue;
-        }
-        if ((i+2) % 8 == 0) {
-            printf(" ");
-        }
-        if ((i+2) % 16 == 0) {
-            printf("\n");
-        } 
-    }*/
-    // Add your packet processing code here
+    (void)pkthdr;
+
+   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+   if (ip->protocol == IPPROTO_TCP) {
+        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+        int port_index = port_to_port_index(htons(tcp->th_sport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+        if ((tcp->th_flags & TH_RST) == TH_RST)
+	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[1]].state = CLOSE;
+   }
+   else if (ip->protocol == IPPROTO_ICMP) {
+        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+        int port_index = port_to_port_index(htons(tcp->th_dport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
+        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[1]].state = FILTERED;
+   }
 }
 
 void packet_handler_ACK(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
-    // This is the callback function that will be called for each captured packet.
-    // You can process the packet data here.
-    (void)packet;
     (void)user;
-    printf("ACK Packet captured, length: %d\n", pkthdr->len);
-    //struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-	//printf("ip_p = %d %d\n", ip->protocol, IPPROTO_ICMP);
-    //struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-	//printf("ip prot 0x%x\n", ntohs(ip->protocol));
-	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
-	if ((tcp->th_flags & TH_RST) == TH_RST)
-		printf("Port is Unfiltered\n");
-	else
-		printf("Port is Filtered\n");
-    printf("\n");
-    // Add your packet processing code here
+    (void)pkthdr;
+
+   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+   if (ip->protocol == IPPROTO_TCP) {
+        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+        int port_index = port_to_port_index(htons(tcp->th_sport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+        if ((tcp->th_flags & TH_RST) == TH_RST)
+	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[2]].state = CLOSE;
+   }
 }
 
 void packet_handler_FIN(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
-    // This is the callback function that will be called for each captured packet.
-    // You can process the packet data here.
-    (void)packet;
     (void)user;
-    printf("FIN Packet captured, length: %d\n", pkthdr->len);
-   // struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-//	printf("ip_p = %d %d\n", ip->protocol, IPPROTO_ICMP);
-    //struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-	//printf("ip prot 0x%x\n", ntohs(ip->protocol));
-	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
-	if ((tcp->th_flags & TH_RST) == TH_RST)
-		printf("Port is close\n");
-	else
-		printf("Port is open\n");
-    printf("\n");
-    // Add your packet processing code here
+    (void)pkthdr;
+
+   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+   if (ip->protocol == IPPROTO_TCP) {
+        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+        int port_index = port_to_port_index(htons(tcp->th_sport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+        if ((tcp->th_flags & TH_RST) == TH_RST)
+	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[3]].state = CLOSE;
+   }
+   else if (ip->protocol == IPPROTO_ICMP) {
+        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+        int port_index = port_to_port_index(htons(tcp->th_dport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
+        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[3]].state = FILTERED;
+   }
 }
 
 
 void packet_handler_XMAS(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
-    // This is the callback function that will be called for each captured packet.
-    // You can process the packet data here.
-    (void)packet;
     (void)user;
-    printf("XMAS Packet captured, length: %d\n", pkthdr->len);
-  //  struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-//	printf("ip_p = %d %d\n", ip->protocol, IPPROTO_ICMP);
-    //struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-	//printf("ip prot 0x%x\n", ntohs(ip->protocol));
-	struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
-	if ((tcp->th_flags & TH_RST) == TH_RST)
-		printf("Port is close\n");
-	else
-		printf("Port is open\n");
-    printf("\n");
-    // Add your packet processing code here
+    (void)pkthdr;
+
+   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+   if (ip->protocol == IPPROTO_TCP) {
+        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+        int port_index = port_to_port_index(htons(tcp->th_sport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+        if ((tcp->th_flags & TH_RST) == TH_RST)
+	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = CLOSE;
+   }
+   else if (ip->protocol == IPPROTO_ICMP) {
+        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+        int port_index = port_to_port_index(htons(tcp->th_dport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
+        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = FILTERED;
+   }
 }
 
 void packet_handler_UDP(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
-    // This is the callback function that will be called for each captured packet.
-    // You can process the packet data here.
-    (void)packet;
     (void)user;
-    printf("UDP Packet captured, length: %d\n", pkthdr->len);
-    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-	//printf("ip_p = %d %d\n", ip->protocol, IPPROTO_ICMP);
-	if (ip->tot_len != 0)
-		printf("Open\n");
-	else
-		printf("Open|Filtered\n");
-	printf("\n");
-    // Add your packet processing code here
+    (void)pkthdr;
+
+   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+   if (ip->protocol == IPPROTO_UDP) {
+        struct udphdr *udp = (struct udphdr*)(ip + sizeof(struct iphdr));
+        int port_index = port_to_port_index(htons(udp->uh_sport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(udp->uh_sport);
+        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[5]].state = OPEN;
+   }
+   else if (ip->protocol == IPPROTO_ICMP) {
+        struct icmphdr *icmp = (struct icmphdr*)(ip + sizeof(struct iphdr));
+        struct udphdr *udp = (struct udphdr*)(ip + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+        int port_index = port_to_port_index(htons(udp->uh_dport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(udp->uh_dport);
+        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[5]].state = (icmp->code == 3) ? CLOSE : FILTERED;
+   }
 }
 
 void	timeout_handler(int signal)
