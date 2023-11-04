@@ -200,10 +200,12 @@ static int		format_scan(char *scan)
 					found = true;
 				}
 		}
+		free(scan_split[i]);
 		if (!found)
 			return (display_scan_unknown(scan_split[i]));
 		i++;
 	}
+	free(scan_split);
 	return (0);
 }
 
@@ -311,6 +313,17 @@ int				parser(int ac, char **av, t_pars *data)
 				i++;
 				memcpy((void *)(addr + opt_off * 8), &av[i], 8);
 			}
+		}
+	}
+	if (g_env.nb_port == 0) {
+		g_env.nb_port = 1024;
+		g_env.port = (int*)malloc(sizeof(int) * g_env.nb_port);
+		if (g_env.port == NULL) 
+			error_exit("ports malloc failed", 1);
+		int port = 0;
+		while (port < g_env.nb_port) {
+			g_env.port[port] = port + 1;
+			port++;
 		}
 	}
 	return (format_opt(data));

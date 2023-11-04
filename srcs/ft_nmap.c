@@ -28,16 +28,16 @@ int get_interface(void) {
 void init_global(void) {
     g_env.timeout = 1;
     g_env.src_port = 80;
-    g_env.nb_port = 1024;
+    g_env.nb_port = 0; /*1024;
     g_env.port = (int*)malloc(sizeof(int)*g_env.nb_port);
-    if (g_env.port == NULL) {
+	if (g_env.port == NULL) {
         error_exit("ports malloc failed", 1);
     }
     int port = 0;
     while (port < g_env.nb_port) {
         g_env.port[port] = port+1;
         port++;
-    }
+    }*/
 
     g_env.nb_threads = 0;
 
@@ -47,6 +47,20 @@ void init_global(void) {
     if (get_interface() == 1) {
         error_exit("Could not find interface to open for pcap", 1);
     }
+}
+
+void free_global(void) {
+	free(g_env.port);
+	free(g_env.device);
+	free(g_env.scan_bit_to_index);
+	free(g_env.ip_and_hosts);
+	for (int i = 0; i < g_env.nb_ips; i++) {
+		for (int j = 0; j < g_env.nb_port; j++) {
+			free(g_env.results[i].ports_result[j].scan_results);
+		}
+		free(g_env.results[i].ports_result);
+	}
+	free(g_env.results);
 }
 
 void init_scan_result(int it_ip, int it_port) {
@@ -285,6 +299,7 @@ int main(int ac, char **av) {
     ip_loop(); // (all threads creation/deletion should be done here)
 
     // free_global();
+	free_global();
     close(g_env.socket_fd);
     pthread_mutex_destroy(&(g_env.launch_thread_m));
     pthread_mutex_destroy(&(g_env.pcap_compile_m));
