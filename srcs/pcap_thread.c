@@ -192,6 +192,7 @@ void pcap_thread(void *data) {
 		fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(g_env.handle));
         error_exit("pcap_setfilter failed", 2);
 	}
+	free(filter_exp);
 	struct sigaction sa;
 
 	sa.sa_handler = timeout_handler;
@@ -217,6 +218,7 @@ void pcap_thread(void *data) {
             break ;
         }
     }
+	pcap_close(g_env.handle);
 }
 
 void setup_pcap(int *scan_bit) {

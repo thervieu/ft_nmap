@@ -67,7 +67,8 @@ void scan_thread(void *data) {
 
 
     scan(buffer, scanner, ip);
-    // g_env.results[g_env.ite_ip].ports_result[scanner.port_index].scan_results[g_env.scan_bit_to_index[scanner.scan_bit]].change_me = true;
+    free(buffer);
+	// g_env.results[g_env.ite_ip].ports_result[scanner.port_index].scan_results[g_env.scan_bit_to_index[scanner.scan_bit]].change_me = true;
     if (g_env.nb_threads==0)
         return ;
     pthread_mutex_lock(&(g_env.launch_thread_m));

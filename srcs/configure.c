@@ -184,7 +184,7 @@ struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
 	tcp->check = cksum((unsigned short*)pseudogram, sizeof(struct pseudo_header) + sizeof(struct tcphdr));
 	ip->ip_sum = cksum((unsigned short*)buffer, ip->ip_len);
 	// printf("tcp check %d\n", tcp->check);
-
+	free(pseudogram);
     return tcp;
 }
 
@@ -212,6 +212,7 @@ struct udphdr* configure_udp_header(char *buffer, int dst_port) {
 	udp->check = cksum((unsigned short*)pseudogram, sizeof(struct pseudo_header) + sizeof(struct udphdr));
 	ip->ip_sum = cksum((unsigned short*)buffer, ip->ip_len);
     udp->check = cksum((unsigned short*)udp, sizeof(struct udphdr));
+	free(pseudogram);
 	// printf("udp check %d\n", udp->check);
     return udp;
 }

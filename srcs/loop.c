@@ -123,6 +123,7 @@ void port_loop(int scan_bit) {
         if (g_env.nb_threads == 0) {
             scan_thread((void*)scanner);
             i++;
+			free(scanner);
             continue ;
         }
         int thread_id = get_available_thread();
@@ -131,6 +132,7 @@ void port_loop(int scan_bit) {
             error_exit("pthread_create failed", 1);
         }
         i++;
+		free(scanner);
     }
     // display
 }
