@@ -36,7 +36,7 @@ static int		display_scan_unknown(char *unknown)
 
 static int		is_valid_opt(char *opt)
 {
-	static char		valid_opt[NB_OPT][9] = {"src_port", "dst_port", "ip", "file", "speedup", "scan", "help"};
+	static char		valid_opt[NB_OPT][9] = {"src_port", "dst_port", "ip", "file", "speedup", "scan", "ttl", "help"};
 
 	for (int i = 0; i < NB_OPT; i++) {
 		if (strcmp(valid_opt[i], opt + 2) == 0)
@@ -104,7 +104,7 @@ static int		count_port(char *port_string)
 	return (0);
 }
 
-static int		format_sport(char *s_port)
+static int		format_src_port(char *s_port)
 {
 	int		i = 0;
 
@@ -124,7 +124,7 @@ static int		format_sport(char *s_port)
 	return (0);
 }
 
-static int		format_dport(char *port_string)
+static int		format_dst_port(char *port_string)
 {
 	int			i;
 	int			ret;
@@ -200,6 +200,7 @@ void			print_scan(int scan)
 		if ((scan & value_scan[i]) == value_scan[i])
 			printf("%s ", known_scan[i]);
 	}
+	printf("\n");
 }
 
 static int		format_scan(char *scan)
@@ -298,12 +299,37 @@ static int		format_ip(char *ip)
 	return (0);
 }
 
+
+static int		format_ttl(char *ttl)
+{
+	int		i = 0;
+
+	if (!ttl)
+		return (0);
+	while (ttl[i]) {
+		if (is_digit(ttl[i]) == 0) {
+			printf("%s isn't a valid parameter for --src_port. 1 to 65535 only.\n", ttl);
+			return (-1);
+		}
+		i++;
+	}
+	if ((g_env.ttl = atoi(ttl)) < 1) {
+		printf("%d is too low for ttl. 1 to 255 only.\n", g_env.ttl);
+		return (-1);
+	}
+	if ((g_env.ttl = atoi(ttl)) > 255) {
+		printf("%d is too low for ttl. 1 to 255 only.\n", g_env.ttl);
+		return (-1);
+	}
+	return (0);
+}
+
 static int		format_opt(t_pars *data)
 {
 	//{"ports", "ip", "file", "speedup", "scan", "help"};
-	if (data->s_port && format_sport(data->s_port) == -1)
+	if (data->s_port && format_src_port(data->s_port) == -1)
 		return (-1);
-	if (data->d_port && format_dport(data->d_port) == -1)
+	if (data->d_port && format_dst_port(data->d_port) == -1)
 		return (-1);
 	if (data->ip && format_ip(data->ip) == -1)
 		return (-1);
@@ -312,6 +338,8 @@ static int		format_opt(t_pars *data)
 	if (data->speedup && format_speedup(data->speedup) == -1)
 		return (-1);
 	if (data->scan && format_scan(data->scan) == -1)
+		return (-1);
+	if (data->ttl && format_ttl(data->ttl) == -1)
 		return (-1);
 	if (data->file==NULL && data->ip==NULL) {
 		printf("ft_nmap: parsing error: no ip/host was specified\n");
@@ -330,7 +358,7 @@ int				parser(int ac, char **av, t_pars *data)
 			//is_valid_opt returns -1 in case the opt doesn't exist
 			if ((opt_off = is_valid_opt(av[i])) == -1)
 				return (display_unknown(av[0], av[i]));
-			if (opt_off == 5)
+			if (opt_off == NB_OPT)
 					return (display_help(av[0]));
 			else {
 				if (i + 1 == ac)

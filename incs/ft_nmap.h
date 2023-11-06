@@ -71,6 +71,7 @@ typedef struct	s_pars {
 	char		*file;
 	char		*speedup;
 	char		*scan;
+	char		*ttl;
 }				t_pars;
 
 typedef struct in_addr t_addr;
@@ -110,6 +111,7 @@ typedef struct s_env {
     int			nb_port;
     char		*file;
     int			scan;
+    int			ttl;
     t_network	 *ip_and_hosts; // can be array ?
     //t_list *scan_types; // can be array ?
 

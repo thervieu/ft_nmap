@@ -114,7 +114,7 @@ struct ip *configure_ip(char *buffer, int scan_type) {
     ip->ip_len = sizeof(struct ip) + ((scan_type^UDP) ? sizeof(struct tcphdr) : sizeof(struct udphdr));
 	ip->ip_id = 0;
     ip->ip_off = 0;
-    ip->ip_ttl = 64; // option ttl
+    ip->ip_ttl = g_env.ttl;
     ip->ip_p = (scan_type^UDP) ? IPPROTO_TCP : IPPROTO_UDP;
     ip->ip_sum = cksum((unsigned short*)ip, sizeof(struct ip));
 	// printf("ip check %d\n", ip->ip_sum);

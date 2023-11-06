@@ -27,6 +27,7 @@ int get_interface(void) {
 
 void init_global(void) {
     g_env.timeout = 1;
+    g_env.ttl = 64;
     g_env.s_port = 80;
     g_env.nb_port = 0;
 
@@ -197,16 +198,16 @@ static void		display_ips(void)
 }
 
 void			display_nmap(void) {
-	printf("Scan Configurations\n\
-Target Ip-Address : ");
+	printf("Scan Configurations\n");
+    printf("Target Ip-Address : ");
 	display_ips();
-	printf("No of Ports to scan : %d\n\
-Scans to be performed : ", g_env.nb_port);
+	printf("N° of Ports to scan : %d\n", g_env.nb_port);
+	printf("Scans to be performed : ");
 	print_scan(g_env.scan);
 	printf("Scanning with port %d\n", g_env.s_port);
-	printf("\nNo of threads : %d\n\
-Scanning..\n\
-........\n", g_env.nb_threads);
+	printf("Scanning with ttl of %d\n", g_env.ttl);
+	printf("N° of threads : %d\n\n", g_env.nb_threads);
+	printf("Scanning ...\n\n");
 }
 
 size_t ft_stlren(char *str) {
