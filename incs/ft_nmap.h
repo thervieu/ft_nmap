@@ -72,6 +72,8 @@ typedef struct	s_pars {
 	char		*speedup;
 	char		*scan;
 	char		*ttl;
+	char		*host_timeout;
+	char		*pbt;
 }				t_pars;
 
 typedef struct in_addr t_addr;
@@ -106,12 +108,13 @@ typedef struct s_env {
     */
     int nb_threads;
 
-    int			timeout;
+    int			host_timeout;
     int			*port;
     int			nb_port;
     char		*file;
     int			scan;
     int			ttl;
+    int         packet_buffer_timeout;
     t_network	 *ip_and_hosts; // can be array ?
     //t_list *scan_types; // can be array ?
 
@@ -128,6 +131,7 @@ typedef struct s_env {
     char *device;
     pthread_t *scanner_threads;
     pthread_t *pcap_thread;
+    pthread_t *alarm_thread;
     pcap_t *handle;
     bool *threads_availability;
     t_result *results; // array of size len(ip/hosts)

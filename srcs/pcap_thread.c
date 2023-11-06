@@ -144,7 +144,7 @@ void packet_handler_UDP(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
    }
 }
 
-void	timeout_handler(int signal)
+void	host_timeout_handler(int signal)
 {
     (void)signal;
 	pcap_breakloop(g_env.handle);
@@ -198,7 +198,7 @@ void pcap_thread(void *data) {
     if (pcap_lookupnet("any", &net, &mask, errbuf) < 0) {
         error_exit("pcap_lookup: could not find network device", 1);
     }
-    g_env.handle = pcap_open_live("any", BUFSIZ, 1, 100, errbuf);
+    g_env.handle = pcap_open_live("any", BUFSIZ, 1, g_env.packet_buffer_timeout, errbuf);
     if (g_env.handle==NULL) {
         error_exit("pcap_open_live: could not open device", 1);
     }
@@ -215,10 +215,9 @@ void pcap_thread(void *data) {
 	free(filter_exp);
 	struct sigaction sa;
 
-	sa.sa_handler = timeout_handler;
+	sa.sa_handler = host_timeout_handler;
 	sa.sa_flags = SA_RESTART;
 	sigaction(SIGALRM, &sa, NULL);
-	alarm(g_env.timeout);
 
     void *a=NULL;
 	// // https://cpp.hotexamples.com/fr/site/file?hash=0xcf42149af84f0b881f83b4cce88aca7e474429ea0e6df9b1ffddd94d9b46c087
@@ -242,8 +241,40 @@ void pcap_thread(void *data) {
 	pcap_close(g_env.handle);
 }
 
+long long	get_time(void)
+{
+	struct timeval	time;
+
+	gettimeofday(&time, NULL);
+	return (time.tv_sec * 1000 + time.tv_usec / 1000);
+}
+// time sudo ./ft_nmap --ip localhost --dst_port 80-90 --speedup 30 --src_port 4242 --scan NULL/SYN --pkt_buf_timeout 500 --host_timeout 800
+void		ft_alarm(void* data)
+{
+    (void)data;
+	struct timeval	time1;
+	struct timeval	time2;
+
+	gettimeofday(&time1, NULL);
+    long unsigned int host_timeout = (long unsigned int)g_env.host_timeout + 20000;
+	while (1)
+	{
+		usleep(50);
+		gettimeofday(&time2, NULL);
+		if ((size_t)(((size_t)(time2.tv_sec - time1.tv_sec) * 1000000)
+			+ (size_t)(time2.tv_usec - time1.tv_usec)) > host_timeout)
+			break ;
+	}
+    ualarm(1, 0);
+}
+
 void setup_pcap(int *scan_bit) {
     pthread_mutex_lock(&(g_env.pcap_compile_m));
+   if (pthread_create(g_env.alarm_thread, NULL, (void*)&ft_alarm, (void*)NULL) != 0) {
+        printf("alarm thread failed\n");
+        error_exit("pthread_create failed", 1);
+   }
+   pthread_detach(*(g_env.alarm_thread));
    if (pthread_create(g_env.pcap_thread, NULL, (void*)&pcap_thread, (void*)scan_bit) != 0) {
         printf("pcap thread failed\n");
         error_exit("pthread_create failed", 1);

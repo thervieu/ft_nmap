@@ -9,8 +9,11 @@ int		display_help(char *prog_name)
 --dst_port ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)\n\
 --ip ip addresses to scan in dot format\n\
 --file File name containing IP addresses to scan,\n\
---speedup [250 max] number of parallel threads to use\n\
---scan SYN/NULL/FIN/XMAS/ACK/MAIMON/UDP\n", prog_name);
+--scan SYN/NULL/FIN/XMAS/ACK/MAIMON/UDP\n\
+--ttl [1-255] number of time-to-live in ip header\n\
+--host_timeout [500 min] time in ms to wait for host response\n\
+--pkt_buf_timeout [100 min] interval to read the packet buffer\
+(see pcap_open_live)\n", prog_name);
 	return (-1);
 }
 
@@ -36,7 +39,18 @@ static int		display_scan_unknown(char *unknown)
 
 static int		is_valid_opt(char *opt)
 {
-	static char		valid_opt[NB_OPT][9] = {"src_port", "dst_port", "ip", "file", "speedup", "scan", "ttl", "help"};
+	static char		valid_opt[NB_OPT][22] = {
+		"src_port",
+		"dst_port",
+		"ip",
+		"file",
+		"speedup",
+		"scan",
+		"ttl",
+		"host_timeout",
+		"pkt_buf_timeout",
+		"help"
+	};
 
 	for (int i = 0; i < NB_OPT; i++) {
 		if (strcmp(valid_opt[i], opt + 2) == 0)
@@ -100,6 +114,47 @@ static int		count_port(char *port_string)
 	}
 	if (g_env.nb_port > 1024) {
 		error_exit("too many ports", 1024);
+	}
+	return (0);
+}
+
+static int		format_host_timeout(char *host_timeout)
+{
+	int		i = 0;
+
+	if (!host_timeout)
+		return (0);
+	while (host_timeout[i]) {
+		if (is_digit(host_timeout[i]) == 0) {
+			printf("%s isn't a valid parameter for --host_timeout. 500ms or more only.\n", host_timeout);
+			return (-1);
+		}
+		i++;
+	}
+	if ((g_env.host_timeout = atoi(host_timeout)) < 500) {
+		printf("%d is too small for host_timeout. 500ms or more only.\n", g_env.host_timeout);
+		return (-1);
+	}
+	g_env.host_timeout *= 1000;
+	return (0);
+}
+
+static int		format_packet_buffer_timeout(char *pbt)
+{
+	int		i = 0;
+
+	if (!pbt)
+		return (0);
+	while (pbt[i]) {
+		if (is_digit(pbt[i]) == 0) {
+			printf("%s isn't a valid parameter for --packet_buffer_timeout. 100ms or more only.\n", pbt);
+			return (-1);
+		}
+		i++;
+	}
+	if ((g_env.packet_buffer_timeout = atoi(pbt)) < 100) {
+		printf("%d is too small for packet_buffer_timeout. 100ms or more only.\n", g_env.packet_buffer_timeout);
+		return (-1);
 	}
 	return (0);
 }
@@ -341,8 +396,17 @@ static int		format_opt(t_pars *data)
 		return (-1);
 	if (data->ttl && format_ttl(data->ttl) == -1)
 		return (-1);
+	if (data->host_timeout && format_host_timeout(data->host_timeout) == -1)
+		return (-1);
+	if (data->pbt && format_packet_buffer_timeout(data->pbt) == -1)
+		return (-1);
 	if (data->file==NULL && data->ip==NULL) {
 		printf("ft_nmap: parsing error: no ip/host was specified\n");
+		return (-1);
+	}
+	if ((g_env.host_timeout/1000) - g_env.packet_buffer_timeout < 200) {
+		printf("ft_nmap: parsing error: host timeout %d is too close to pkt_buf_timeout %d. \
+At least 200ms difference is required.\n", (g_env.host_timeout/1000), g_env.packet_buffer_timeout);
 		return (-1);
 	}
 	return (0);

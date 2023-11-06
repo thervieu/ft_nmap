@@ -26,7 +26,8 @@ int get_interface(void) {
 }
 
 void init_global(void) {
-    g_env.timeout = 1;
+    g_env.packet_buffer_timeout = 500;
+    g_env.host_timeout = 700000; // microseconds
     g_env.ttl = 64;
     g_env.s_port = 80;
     g_env.nb_port = 0;
@@ -48,6 +49,8 @@ void free_global(void) {
 	    free(g_env.device);
     if (g_env.pcap_thread)
 	    free(g_env.pcap_thread);
+    if (g_env.alarm_thread)
+	    free(g_env.alarm_thread);
     if (g_env.scan_bit_to_index)
 	    free(g_env.scan_bit_to_index);
 
@@ -164,6 +167,10 @@ void init_structs_global(void) {
     }
     g_env.pcap_thread = (pthread_t*)malloc(sizeof(pthread_t));
     if (g_env.pcap_thread == NULL) {
+        error_exit("malloc failed scanner_threads array", 1);
+    }
+    g_env.alarm_thread = (pthread_t*)malloc(sizeof(pthread_t));
+    if (g_env.alarm_thread == NULL) {
         error_exit("malloc failed scanner_threads array", 1);
     }
     if (g_env.nb_threads == 0) {
