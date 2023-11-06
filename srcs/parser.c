@@ -9,7 +9,7 @@ int		display_help(char *prog_name)
 --ip ip addresses to scan in dot format\n\
 --file File name containing IP addresses to scan,\n\
 --speedup [250 max] number of parallel threads to use\n\
---scan SYN/NULL/FIN/XMAS/ACK/UDP\n", prog_name);
+--scan SYN/NULL/FIN/XMAS/ACK/MAIMON/UDP\n", prog_name);
 	return (-1);
 }
 
@@ -171,8 +171,8 @@ static int		format_speedup(char *speedup)
 
 void			print_scan(int scan)
 {
-	static char		known_scan[NB_SCAN][5] = {"SYN", "NULL", "FIN", "XMAS", "ACK", "UDP"};
-	static int		value_scan[NB_SCAN] = {SYN, NUL, FIN, XMS, ACK, UDP};
+	static char		known_scan[NB_SCAN][7] = {"SYN", "NULL", "FIN", "XMAS", "ACK", "MAIMON", "UDP"};
+	static int		value_scan[NB_SCAN] = {SYN, NUL, FIN, XMS, ACK, MMN, UDP};
 
 	for (int i = 0; i < NB_SCAN; i++) {
 		if ((scan & value_scan[i]) == value_scan[i])
@@ -185,8 +185,8 @@ static int		format_scan(char *scan)
 	int				i = 0;
 	bool			found;
 	char			**scan_split;
-	static char		known_scan[NB_SCAN][5] = {"SYN", "NULL", "FIN", "XMAS", "ACK", "UDP"};
-	static int		value_scan[NB_SCAN] = {SYN, NUL, FIN, XMS, ACK, UDP};
+	static char		known_scan[NB_SCAN][7] = {"SYN", "NULL", "FIN", "XMAS", "ACK", "MAIMON", "UDP"};
+	static int		value_scan[NB_SCAN] = {SYN, NUL, FIN, XMS, ACK, MMN, UDP};
 
 	if (!scan)
 		return (0);
@@ -271,7 +271,7 @@ static int		format_ip(char *ip)
 	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
 	if (get_ip_addr(ip, 0) == -1)
 		return (-1);
-	g_env.ip_and_hosts[0].hostname = ip;
+	g_env.ip_and_hosts[0].hostname = ft_strdup(ip);
 	g_env.ip_and_hosts[0].unknown = false;
 	return (0);
 }

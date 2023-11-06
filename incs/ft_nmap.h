@@ -37,7 +37,7 @@
 
 # define NB_OPT 6
 
-# define NB_SCAN 6
+# define NB_SCAN 7
 
 // scans
 # define SYN 0x01
@@ -45,7 +45,8 @@
 # define ACK 0x04
 # define FIN 0x08
 # define XMS 0x10
-# define UDP 0x20
+# define MMN 0x20
+# define UDP 0x40
 
 // tcp flags
 # define NULL_F 0x00

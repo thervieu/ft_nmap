@@ -84,8 +84,27 @@ void packet_handler_FIN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
    }
 }
 
-
 void packet_handler_XMAS(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
+    (void)user;
+    (void)pkthdr;
+
+   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+   if (ip->protocol == IPPROTO_TCP) {
+        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+        int port_index = port_to_port_index(htons(tcp->th_sport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+        if ((tcp->th_flags & TH_RST) == TH_RST)
+	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = CLOSE;
+   }
+   else if (ip->protocol == IPPROTO_ICMP) {
+        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+        int port_index = port_to_port_index(htons(tcp->th_dport));
+	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
+        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = FILTERED;
+   }
+}
+
+void packet_handler_MAIMON(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     (void)user;
     (void)pkthdr;
 
@@ -159,6 +178,7 @@ void pcap_thread(void *data) {
         {packet_handler_ACK},
         {packet_handler_FIN},
         {packet_handler_XMAS},
+        {packet_handler_MAIMON},
         {packet_handler_UDP}
     };
 

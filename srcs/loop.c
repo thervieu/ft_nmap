@@ -33,6 +33,9 @@ int scan_to_flags(int scan) {
         return FIN_F;
     if (scan&XMS)
         return FIN_F|PSH_F|URG_F;
+    if (scan&MMN) {
+        return FIN_F|ACK_F;
+    }
     return FIN_F|PSH_F|URG_F|SYN_F|RST_F;
 }
 
@@ -149,12 +152,6 @@ void wait_for_all_threads(void) {
         }
         pthread_mutex_unlock(&(g_env.launch_thread_m));
     }
-    // for (int i = 0; i < g_env.nb_threads; i++) {
-    //     printf("join %d\n", i);
-    //     if (pthread_join(g_env.scanner_threads[i], NULL) < 0) {
-    //         error_exit("pthread_join failed", 1);
-    //     }
-    // }
 }
 
 void scan_loop(void) {

@@ -43,7 +43,7 @@ void init_global(void) {
 
     g_env.nb_ips = 0;
 
-    g_env.scan = 0b111111;
+    g_env.scan = 0b1111111;
     if (get_interface() == 1) {
         error_exit("Could not find interface to open for pcap", 1);
     }
@@ -60,7 +60,8 @@ void free_global(void) {
 	    free(g_env.scan_bit_to_index);
 
     for (int i = 0; i < g_env.nb_ips; i++) {
-        free(g_env.ip_and_hosts[i].hostname);
+        if (g_env.ip_and_hosts[i].hostname)
+            free(g_env.ip_and_hosts[i].hostname);
     }
     if (g_env.ip_and_hosts)
 	    free(g_env.ip_and_hosts);
@@ -69,7 +70,6 @@ void free_global(void) {
 
     if (g_env.nb_threads && g_env.scanner_threads)
         free(g_env.scanner_threads);
-
     if (!g_env.results) {
         return;
     }
@@ -110,6 +110,9 @@ void init_scan_result(int it_ip, int it_port) {
                 g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
                 break ;
             case 5:
+                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
+                break ;
+            case 6:
                 g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
                 break ;
         }
@@ -227,8 +230,8 @@ int			display_ports(bool openness) {
     int openness_ports = 0;
 
 	printf("%s ports:\n\
- Port       Service Name        Results                       Conclusion\n", openness ? "Open" : "Closed");
-	for (int i = 0; i < 100; i++)
+ Port       Service Name        Results                              Conclusion\n", openness ? "Open" : "Closed");
+	for (int i = 0; i < 90; i++)
 		printf("-");
 	printf("\n");
 
@@ -253,8 +256,6 @@ int			display_ports(bool openness) {
             openness_ports++;
 			struct servent *serv;
 			serv = getservbyport(htons(g_env.results[g_env.ite_ip].ports_result[i].port), NULL);
-			// if (!serv) serv = getservbyport(htons(g_env.results[g_env.ite_ip].ports_result[i].port), "udp");
-			// if (!serv) serv = getservbyport(htons(g_env.results[g_env.ite_ip].ports_result[i].port), "udp");
             int printed = 0;
 			printf("%*d%*s        ", 5, g_env.results[g_env.ite_ip].ports_result[i].port, 19, serv ? serv->s_name : "Unassigned");
             int written = 0;
@@ -263,8 +264,8 @@ int			display_ports(bool openness) {
 
                 
                 printed++;
-                if (printed==4) {
-                    printf("\n%*s", 30, "");
+                if (printed==5) {
+                    printf("\n%*s", 32, "");
                     written = 0;
                 }
 
@@ -291,11 +292,15 @@ int			display_ports(bool openness) {
                         written++;
                         break;
                     case 5:
+                        printf("MAIMON(%s) ", state);
+                        written += 3;
+                        break;
+                    case 6:
                         printf("UDP(%s) ", state);
                         break;
                 }
             }
-            printf("%*s\n", 40 - written, openness ? "Open" : "Closed");
+            printf("%*s\n", 47 - written, openness ? "Open" : "Closed");
 		}
 	}
 	printf("\n");
@@ -334,4 +339,6 @@ int main(int ac, char **av) {
     close(g_env.socket_fd);
     pthread_mutex_destroy(&(g_env.launch_thread_m));
     pthread_mutex_destroy(&(g_env.pcap_compile_m));
+
+    return 0;
 }
