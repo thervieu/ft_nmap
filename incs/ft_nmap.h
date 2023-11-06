@@ -35,7 +35,7 @@
 # include <stdint.h>
 # include <sys/poll.h>
 
-# define NB_OPT 6
+# define NB_OPT 10
 
 # define NB_SCAN 7
 
@@ -65,7 +65,8 @@
 # define PACKET_BUFFER_SIZE 64
 
 typedef struct	s_pars {
-	char		*port;
+	char		*s_port;
+	char		*d_port;
 	char		*ip;
 	char		*file;
 	char		*speedup;
@@ -115,7 +116,7 @@ typedef struct s_env {
     /*
     ** general storage structs for threads and results
     */
-    int src_port;
+    int s_port;
     int socket_fd;
 
     int ite_ip;

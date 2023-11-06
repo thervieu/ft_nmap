@@ -149,12 +149,9 @@ struct pseudo_header {
 
 struct tcphdr* configure_tcp_header(char *buffer, int dst_port, int tcp_flags) {
     struct ip *ip = (struct ip *)buffer;
-    // printf("ip->ip_hl %d port src %d port dest %d \n", ip->ip_hl, g_env.src_port, dst_port);
     struct tcphdr *tcp = (struct tcphdr *)(buffer + ip->ip_hl*4);
 
-    // some options were not verified
-    // seq, ack seq, doff, window, urg_ptr, check
-    tcp->source = htons(g_env.src_port);
+    tcp->source = htons(g_env.s_port);
     tcp->dest = htons(dst_port);
     tcp->seq = htonl(123);
     tcp->ack_seq = htonl(456);
@@ -192,7 +189,7 @@ struct udphdr* configure_udp_header(char *buffer, int dst_port) {
     struct ip *ip = (struct ip *)buffer;
     
     struct udphdr *udp = (struct udphdr *)(buffer + ip->ip_hl*4);
-    udp->source = htons(g_env.src_port);
+    udp->source = htons(g_env.s_port);
     udp->dest = htons(dst_port);
     udp->len = htons(sizeof(struct udphdr));
 	

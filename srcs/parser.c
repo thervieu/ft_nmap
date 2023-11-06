@@ -5,7 +5,8 @@ int		display_help(char *prog_name)
 	printf("Help Screen\n\
 %s [OPTIONS]\n\
 --help Print this help screen\n\
---ports ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)\n\
+--src_port port to scan with (eg: 80 by default, 4242)\n\
+--dst_port ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)\n\
 --ip ip addresses to scan in dot format\n\
 --file File name containing IP addresses to scan,\n\
 --speedup [250 max] number of parallel threads to use\n\
@@ -35,7 +36,7 @@ static int		display_scan_unknown(char *unknown)
 
 static int		is_valid_opt(char *opt)
 {
-	static char		valid_opt[NB_OPT][8] = {"ports", "ip", "file", "speedup", "scan", "help"};
+	static char		valid_opt[NB_OPT][9] = {"src_port", "dst_port", "ip", "file", "speedup", "scan", "help"};
 
 	for (int i = 0; i < NB_OPT; i++) {
 		if (strcmp(valid_opt[i], opt + 2) == 0)
@@ -46,7 +47,8 @@ static int		is_valid_opt(char *opt)
 
 void			print_parser(t_pars *data)
 {
-	printf("port = %s\n", data->port);
+	printf("src_port = %s\n", data->s_port);
+	printf("dst_port = %s\n", data->d_port);
 	printf("ip = %s\n", data->ip);
 	printf("file = %s\n", data->file);
 	printf("speedup = %s\n", data->speedup);
@@ -102,7 +104,27 @@ static int		count_port(char *port_string)
 	return (0);
 }
 
-static int		format_port(char *port_string)
+static int		format_sport(char *s_port)
+{
+	int		i = 0;
+
+	if (!s_port)
+		return (0);
+	while (s_port[i]) {
+		if (is_digit(s_port[i]) == 0) {
+			printf("%s isn't a valid parameter for --src_port. 0 to 65535 only.\n", s_port);
+			return (-1);
+		}
+		i++;
+	}
+	if ((g_env.s_port = atoi(s_port)) > 65535) {
+		printf("%d is too big for src_port. 0 to 65535 only.\n", g_env.s_port);
+		return (-1);
+	}
+	return (0);
+}
+
+static int		format_dport(char *port_string)
 {
 	int			i;
 	int			ret;
@@ -279,7 +301,9 @@ static int		format_ip(char *ip)
 static int		format_opt(t_pars *data)
 {
 	//{"ports", "ip", "file", "speedup", "scan", "help"};
-	if (data->port && format_port(data->port) == -1)
+	if (data->s_port && format_sport(data->s_port) == -1)
+		return (-1);
+	if (data->d_port && format_dport(data->d_port) == -1)
 		return (-1);
 	if (data->ip && format_ip(data->ip) == -1)
 		return (-1);
