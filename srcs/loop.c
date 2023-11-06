@@ -214,5 +214,4 @@ void ip_loop(void) {
 	int		ret = tv_end.tv_usec - tv_beg_tot.tv_usec;
     if (g_env.nb_ips!=1)
 	    printf("Total scan time: %ld.%d\n", tv_end.tv_sec - tv_beg_tot.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
-
 }

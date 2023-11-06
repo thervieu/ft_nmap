@@ -311,7 +311,8 @@ int				parser(int ac, char **av, t_pars *data)
 				memcpy((void *)(addr + opt_off * 8), &av[i], 8);
 			}
 		} else {
-
+			printf("ft_nmap: parsing error: unrecognized argument %s\n", av[i]);
+			return (-1);
 		}
 	}
 	return (format_opt(data));
