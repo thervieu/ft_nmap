@@ -50,12 +50,33 @@ void init_global(void) {
 }
 
 void free_global(void) {
-	free(g_env.port);
-	free(g_env.device);
-	free(g_env.scan_bit_to_index);
-	free(g_env.ip_and_hosts);
+    if (g_env.port)
+	    free(g_env.port);
+    if (g_env.device)
+	    free(g_env.device);
+    if (g_env.pcap_thread)
+	    free(g_env.pcap_thread);
+    if (g_env.scan_bit_to_index)
+	    free(g_env.scan_bit_to_index);
+
+    for (int i = 0; i < g_env.nb_ips; i++) {
+        free(g_env.ip_and_hosts[i].hostname);
+    }
+    if (g_env.ip_and_hosts)
+	    free(g_env.ip_and_hosts);
+    if (g_env.threads_availability)
+        free(g_env.threads_availability);
+
+    if (g_env.nb_threads && g_env.scanner_threads)
+        free(g_env.scanner_threads);
+
+    if (!g_env.results) {
+        return;
+    }
 	for (int i = 0; i < g_env.nb_ips; i++) {
+        if (!g_env.results[i].ports_result) break;
 		for (int j = 0; j < g_env.nb_port; j++) {
+            if (!g_env.results[i].ports_result[j].scan_results) break;
 			free(g_env.results[i].ports_result[j].scan_results);
 		}
 		free(g_env.results[i].ports_result);
@@ -96,6 +117,18 @@ void init_scan_result(int it_ip, int it_port) {
 }
 
 void init_structs_global(void) {
+	if (g_env.nb_port == 0) {
+		g_env.nb_port = 1024;
+		g_env.port = (int*)malloc(sizeof(int) * g_env.nb_port);
+		if (g_env.port == NULL) 
+			error_exit("ports malloc failed", 1);
+		int port = 0;
+		while (port < g_env.nb_port) {
+			g_env.port[port] = port + 1;
+			port++;
+		}
+	}
+
     int scan_length = 0;
     for (int i=0; i<NB_SCAN; i++) {
         if (g_env.scan>>i & 1) {
@@ -107,14 +140,15 @@ void init_structs_global(void) {
     if (g_env.scan_bit_to_index == NULL) {
         error_exit("malloc failed scan_bit_to_index", 1);
     }
+
     int scan_index = 0;
-    // printf("scans 0x%x")
     for (int i=0; i<NB_SCAN; i++) {
         if (g_env.scan>>i & 1) {
             g_env.scan_bit_to_index[i] = scan_index;
             scan_index++;
         }
     }
+
     g_env.results = (t_result *)malloc(sizeof(t_result)*g_env.nb_ips);
     if (g_env.results == NULL) {
         error_exit("malloc failed results array", 1);
@@ -147,6 +181,8 @@ void init_structs_global(void) {
     for (int i = 0; i < g_env.nb_threads; i++) {
         g_env.threads_availability[i] = true;
     }
+
+    if (g_env.nb_threads==0) return;
     g_env.scanner_threads = (pthread_t *)malloc(sizeof(pthread_t)*g_env.nb_threads);
     if (g_env.scanner_threads == NULL) {
         error_exit("malloc failed scanner_threads array", 1);
@@ -188,7 +224,7 @@ size_t ft_stlren(char *str) {
 
 
 int			display_ports(bool openness) {
-    int openness_ports;
+    int openness_ports = 0;
 
 	printf("%s ports:\n\
  Port       Service Name        Results                       Conclusion\n", openness ? "Open" : "Closed");
@@ -278,27 +314,22 @@ int main(int ac, char **av) {
         error_exit(NULL, 1);
     }
 	bzero(&data, sizeof(data));
-    //default values
+
     init_global();
-	//parser returns -1 in case of error, 0 otherwise
-	if (parser(ac, av, &data) == -1)
+
+	if (parser(ac, av, &data) == -1) {
+        free_global();
 		return(0);
+    }
     (void)av;
 
-    // init mutex(es) (at least one for global, maybe one for send/recv/pcap ?)
     pthread_mutex_init(&(g_env.launch_thread_m), NULL);
     pthread_mutex_init(&(g_env.pcap_compile_m), NULL);
     init_structs_global();
-	// Q: peut etre le bouger dans ip loop ?
-    display_nmap();
-    // Q: que faire quand on a pas de thread (speedup = 0) ? Faire une fonction à part semble plus simple
-    // Q: nmap sort les ports dans l'ordre décroissant... Comment faire ça facilement avec la globale ?
-    // -> on peut faire un g_env->result_ip[nb_ip]->result_ports[1024 ou taille de max_port - min_port]
-    // parse_args();
-    // display_header();
-    ip_loop(); // (all threads creation/deletion should be done here)
 
-    // free_global();
+    display_nmap();
+    ip_loop();
+
 	free_global();
     close(g_env.socket_fd);
     pthread_mutex_destroy(&(g_env.launch_thread_m));

@@ -240,6 +240,7 @@ static int		format_file(char *file)
 	hosts = ft_strsplit(content, '\n');
 	if (!hosts)
 	{
+		free(content);
 		printf("%s is empty\n", file);
 		return (-1);
 	}
@@ -248,6 +249,7 @@ static int		format_file(char *file)
 		g_env.nb_ips++;
 	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
 	if (g_env.ip_and_hosts == NULL) {
+		free(content);
 		error_exit("malloc ip_and_hosts failed", 1);
 	}
 	for (int i = 0; i < g_env.nb_ips; i++)
@@ -258,6 +260,8 @@ static int		format_file(char *file)
 			g_env.ip_and_hosts[i].unknown = true;
 		}
 	}
+	free(content);
+	free(hosts);
 	return (0);
 }
 
@@ -285,13 +289,10 @@ static int		format_opt(t_pars *data)
 		return (-1);
 	if (data->scan && format_scan(data->scan) == -1)
 		return (-1);
-
-	// if (data->scan)
-	// 	print_scan(g_env.scan);
-
-	// for (int i = 0; i < g_env.nb_ips; i++) {
-	// 	printf("Printing %s\n\tcanon = %s\n\tinfo = %s\n\taddr = %s\n", g_env.ip_and_hosts[i].hostname, g_env.ip_and_hosts[i].canonname, g_env.ip_and_hosts[i].nameinfo, inet_ntoa(g_env.ip_and_hosts[i].ip));
-	// }
+	if (data->file==NULL && data->ip==NULL) {
+		printf("ft_nmap: parsing error: no ip/host was specified\n");
+		return (-1);
+	}
 	return (0);
 }
 
@@ -313,17 +314,9 @@ int				parser(int ac, char **av, t_pars *data)
 				i++;
 				memcpy((void *)(addr + opt_off * 8), &av[i], 8);
 			}
-		}
-	}
-	if (g_env.nb_port == 0) {
-		g_env.nb_port = 1024;
-		g_env.port = (int*)malloc(sizeof(int) * g_env.nb_port);
-		if (g_env.port == NULL) 
-			error_exit("ports malloc failed", 1);
-		int port = 0;
-		while (port < g_env.nb_port) {
-			g_env.port[port] = port + 1;
-			port++;
+		} else {
+			printf("ft_nmap: parsing error: unrecognized argument %s\n", av[i]);
+			return (-1);
 		}
 	}
 	return (format_opt(data));
