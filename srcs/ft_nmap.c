@@ -51,6 +51,7 @@ void free_global(void) {
 	    free(g_env.pcap_thread);
     if (g_env.alarm_thread)
 	    free(g_env.alarm_thread);
+
     if (g_env.scan_bit_to_index)
 	    free(g_env.scan_bit_to_index);
 
@@ -65,6 +66,7 @@ void free_global(void) {
 
     if (g_env.nb_threads && g_env.scanner_threads)
         free(g_env.scanner_threads);
+
     if (!g_env.results) {
         return;
     }
