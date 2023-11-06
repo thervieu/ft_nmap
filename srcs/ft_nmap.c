@@ -58,6 +58,10 @@ void free_global(void) {
 	    free(g_env.pcap_thread);
     if (g_env.scan_bit_to_index)
 	    free(g_env.scan_bit_to_index);
+
+    for (int i = 0; i < g_env.nb_ips; i++) {
+        free(g_env.ip_and_hosts[i].hostname);
+    }
     if (g_env.ip_and_hosts)
 	    free(g_env.ip_and_hosts);
     if (g_env.threads_availability)

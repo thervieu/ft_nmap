@@ -240,6 +240,7 @@ static int		format_file(char *file)
 	hosts = ft_strsplit(content, '\n');
 	if (!hosts)
 	{
+		free(content);
 		printf("%s is empty\n", file);
 		return (-1);
 	}
@@ -248,6 +249,7 @@ static int		format_file(char *file)
 		g_env.nb_ips++;
 	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
 	if (g_env.ip_and_hosts == NULL) {
+		free(content);
 		error_exit("malloc ip_and_hosts failed", 1);
 	}
 	for (int i = 0; i < g_env.nb_ips; i++)
@@ -258,6 +260,8 @@ static int		format_file(char *file)
 			g_env.ip_and_hosts[i].unknown = true;
 		}
 	}
+	free(content);
+	free(hosts);
 	return (0);
 }
 
