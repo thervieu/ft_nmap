@@ -1,6 +1,10 @@
 #include "../incs/ft_nmap.h"
 
 int get_available_thread(void) {
+    if (g_env.nb_threads==0) {
+        return 0;
+    }
+
     int available_thread = -1;
     while (true) {
         pthread_mutex_lock(&(g_env.launch_thread_m));
@@ -117,34 +121,29 @@ t_scanner *init_scanner(int thread_id, int port_index, int scan_bit) {
 }
 
 void port_loop(int scan_bit) {
-    int i = 0;
-    while (i < g_env.nb_port) {
-        t_scanner *scanner = init_scanner(0, i, scan_bit);
+    for (int i = 0; i < g_env.nb_port; i++) {
+        int thread_id = get_available_thread();
+        t_scanner *scanner = init_scanner(thread_id, i, scan_bit);
         if (g_env.nb_threads == 0) {
             scan_thread((void*)scanner);
-            i++;
 			free(scanner);
             continue ;
         }
-        int thread_id = get_available_thread();
         if (pthread_create(&(g_env.scanner_threads[thread_id]), NULL, (void*)&scan_thread, (void*)scanner) != 0) {
             printf("thread %d failed\n", thread_id);
             error_exit("pthread_create failed", 1);
         }
-        i++;
-		free(scanner);
     }
-    // display
 }
 
 void wait_for_all_threads(void) {
-    int nb_threads_free = 0;
-    while (nb_threads_free != g_env.nb_threads) {
-        nb_threads_free = 0;
+    int nb_threads_available = 0;
+    while (nb_threads_available != g_env.nb_threads) {
+        nb_threads_available = 0;
         pthread_mutex_lock(&(g_env.launch_thread_m));
         for (int i = 0; i < g_env.nb_threads; i++) {
             if (g_env.threads_availability[i] == true) {
-                nb_threads_free++;
+                nb_threads_available++;
             }
         }
         pthread_mutex_unlock(&(g_env.launch_thread_m));
@@ -204,17 +203,16 @@ void ip_loop(void) {
             printf("Scan took %ld.%d secs\n\n", tv_end.tv_sec - tv_beg.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
         }
         int open_ports_nb = display_ports(true);
-        printf("%d %d\n", g_env.nb_port, open_ports_nb);
-        if (g_env.nb_port - open_ports_nb <= 26) {
+        if (g_env.nb_port <= 26 || g_env.nb_port - open_ports_nb <= 26) {
             display_ports(false);
         }
         else {
-            printf("Too many unopened ports. Not printing them.\n");
+            printf("Too many unopened ports. Not printing them.\n\n");
         }
         g_env.ite_ip++;
     }
 	int		ret = tv_end.tv_usec - tv_beg_tot.tv_usec;
     if (g_env.nb_ips!=1)
-	    printf("Total time: %ld.%d\n", tv_end.tv_sec - tv_beg_tot.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
+	    printf("Total scan time: %ld.%d\n", tv_end.tv_sec - tv_beg_tot.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
 
 }
