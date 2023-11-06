@@ -218,6 +218,7 @@ void pcap_thread(void *data) {
             break ;
         }
     }
+    pcap_freecode(&fp);
 	pcap_close(g_env.handle);
 }
 

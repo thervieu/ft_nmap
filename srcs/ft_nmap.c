@@ -54,12 +54,17 @@ void free_global(void) {
 	    free(g_env.port);
     if (g_env.device)
 	    free(g_env.device);
+    if (g_env.pcap_thread)
+	    free(g_env.pcap_thread);
     if (g_env.scan_bit_to_index)
 	    free(g_env.scan_bit_to_index);
     if (g_env.ip_and_hosts)
 	    free(g_env.ip_and_hosts);
     if (g_env.threads_availability)
         free(g_env.threads_availability);
+
+    if (g_env.nb_threads && g_env.scanner_threads)
+        free(g_env.scanner_threads);
 
     if (!g_env.results) {
         return;

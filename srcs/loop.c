@@ -133,6 +133,7 @@ void port_loop(int scan_bit) {
             printf("thread %d failed\n", thread_id);
             error_exit("pthread_create failed", 1);
         }
+        pthread_detach(g_env.scanner_threads[thread_id]);
     }
 }
 
@@ -148,6 +149,12 @@ void wait_for_all_threads(void) {
         }
         pthread_mutex_unlock(&(g_env.launch_thread_m));
     }
+    // for (int i = 0; i < g_env.nb_threads; i++) {
+    //     printf("join %d\n", i);
+    //     if (pthread_join(g_env.scanner_threads[i], NULL) < 0) {
+    //         error_exit("pthread_join failed", 1);
+    //     }
+    // }
 }
 
 void scan_loop(void) {
