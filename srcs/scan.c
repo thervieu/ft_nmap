@@ -21,7 +21,6 @@ void scan(char *buf, t_scanner scanner, struct ip *ip) {
                 if (ret_sendto < 0) {
                     printf("thread %d: sendto failed errno: %s\n", scanner.thread_id, strerror(errno));
                     printf("poll revents %d\n", fds[0].revents);
-                    // error_exit("sendto failed\n", 1);
                 }
 			}
             else {

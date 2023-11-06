@@ -50,13 +50,24 @@ void init_global(void) {
 }
 
 void free_global(void) {
-	free(g_env.port);
-	free(g_env.device);
-	free(g_env.scan_bit_to_index);
-	free(g_env.ip_and_hosts);
-    free(g_env.threads_availability);
+    if (g_env.port)
+	    free(g_env.port);
+    if (g_env.device)
+	    free(g_env.device);
+    if (g_env.scan_bit_to_index)
+	    free(g_env.scan_bit_to_index);
+    if (g_env.ip_and_hosts)
+	    free(g_env.ip_and_hosts);
+    if (g_env.threads_availability)
+        free(g_env.threads_availability);
+
+    if (!g_env.results) {
+        return;
+    }
 	for (int i = 0; i < g_env.nb_ips; i++) {
+        if (!g_env.results[i].ports_result) break;
 		for (int j = 0; j < g_env.nb_port; j++) {
+            if (!g_env.results[i].ports_result[j].scan_results) break;
 			free(g_env.results[i].ports_result[j].scan_results);
 		}
 		free(g_env.results[i].ports_result);
@@ -97,6 +108,18 @@ void init_scan_result(int it_ip, int it_port) {
 }
 
 void init_structs_global(void) {
+	if (g_env.nb_port == 0) {
+		g_env.nb_port = 1024;
+		g_env.port = (int*)malloc(sizeof(int) * g_env.nb_port);
+		if (g_env.port == NULL) 
+			error_exit("ports malloc failed", 1);
+		int port = 0;
+		while (port < g_env.nb_port) {
+			g_env.port[port] = port + 1;
+			port++;
+		}
+	}
+
     int scan_length = 0;
     for (int i=0; i<NB_SCAN; i++) {
         if (g_env.scan>>i & 1) {
@@ -108,14 +131,15 @@ void init_structs_global(void) {
     if (g_env.scan_bit_to_index == NULL) {
         error_exit("malloc failed scan_bit_to_index", 1);
     }
+
     int scan_index = 0;
-    // printf("scans 0x%x")
     for (int i=0; i<NB_SCAN; i++) {
         if (g_env.scan>>i & 1) {
             g_env.scan_bit_to_index[i] = scan_index;
             scan_index++;
         }
     }
+
     g_env.results = (t_result *)malloc(sizeof(t_result)*g_env.nb_ips);
     if (g_env.results == NULL) {
         error_exit("malloc failed results array", 1);
@@ -284,8 +308,10 @@ int main(int ac, char **av) {
 
     init_global();
 
-	if (parser(ac, av, &data) == -1)
+	if (parser(ac, av, &data) == -1) {
+        free_global();
 		return(0);
+    }
     (void)av;
 
     pthread_mutex_init(&(g_env.launch_thread_m), NULL);
