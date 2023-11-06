@@ -26,24 +26,17 @@ int get_interface(void) {
 }
 
 void init_global(void) {
-    g_env.timeout = 1;
-    g_env.src_port = 80;
-    g_env.nb_port = 0; /*1024;
-    g_env.port = (int*)malloc(sizeof(int)*g_env.nb_port);
-	if (g_env.port == NULL) {
-        error_exit("ports malloc failed", 1);
-    }
-    int port = 0;
-    while (port < g_env.nb_port) {
-        g_env.port[port] = port+1;
-        port++;
-    }*/
+    g_env.packet_buffer_timeout = 500;
+    g_env.host_timeout = 700000; // microseconds
+    g_env.ttl = 64;
+    g_env.s_port = 80;
+    g_env.nb_port = 0;
 
     g_env.nb_threads = 0;
 
     g_env.nb_ips = 0;
 
-    g_env.scan = 0b111111;
+    g_env.scan = 0b1111111;
     if (get_interface() == 1) {
         error_exit("Could not find interface to open for pcap", 1);
     }
@@ -56,11 +49,15 @@ void free_global(void) {
 	    free(g_env.device);
     if (g_env.pcap_thread)
 	    free(g_env.pcap_thread);
+    if (g_env.alarm_thread)
+	    free(g_env.alarm_thread);
+
     if (g_env.scan_bit_to_index)
 	    free(g_env.scan_bit_to_index);
 
     for (int i = 0; i < g_env.nb_ips; i++) {
-        free(g_env.ip_and_hosts[i].hostname);
+        if (g_env.ip_and_hosts[i].hostname)
+            free(g_env.ip_and_hosts[i].hostname);
     }
     if (g_env.ip_and_hosts)
 	    free(g_env.ip_and_hosts);
@@ -110,6 +107,9 @@ void init_scan_result(int it_ip, int it_port) {
                 g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
                 break ;
             case 5:
+                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
+                break ;
+            case 6:
                 g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
                 break ;
         }
@@ -171,6 +171,10 @@ void init_structs_global(void) {
     if (g_env.pcap_thread == NULL) {
         error_exit("malloc failed scanner_threads array", 1);
     }
+    g_env.alarm_thread = (pthread_t*)malloc(sizeof(pthread_t));
+    if (g_env.alarm_thread == NULL) {
+        error_exit("malloc failed scanner_threads array", 1);
+    }
     if (g_env.nb_threads == 0) {
         return ;
     }
@@ -203,15 +207,16 @@ static void		display_ips(void)
 }
 
 void			display_nmap(void) {
-	printf("Scan Configurations\n\
-Target Ip-Address : ");
+	printf("Scan Configurations\n");
+    printf("Target Ip-Address : ");
 	display_ips();
-	printf("No of Ports to scan : %d\n\
-Scans to be performed : ", g_env.nb_port);
+	printf("N° of Ports to scan : %d\n", g_env.nb_port);
+	printf("Scans to be performed : ");
 	print_scan(g_env.scan);
-	printf("\nNo of threads : %d\n\
-Scanning..\n\
-........\n", g_env.nb_threads);
+	printf("Scanning with port %d\n", g_env.s_port);
+	printf("Scanning with ttl of %d\n", g_env.ttl);
+	printf("N° of threads : %d\n\n", g_env.nb_threads);
+	printf("Scanning ...\n\n");
 }
 
 size_t ft_stlren(char *str) {
@@ -227,8 +232,8 @@ int			display_ports(bool openness) {
     int openness_ports = 0;
 
 	printf("%s ports:\n\
- Port       Service Name        Results                       Conclusion\n", openness ? "Open" : "Closed");
-	for (int i = 0; i < 100; i++)
+ Port       Service Name        Results                              Conclusion\n", openness ? "Open" : "Closed");
+	for (int i = 0; i < 90; i++)
 		printf("-");
 	printf("\n");
 
@@ -253,8 +258,6 @@ int			display_ports(bool openness) {
             openness_ports++;
 			struct servent *serv;
 			serv = getservbyport(htons(g_env.results[g_env.ite_ip].ports_result[i].port), NULL);
-			// if (!serv) serv = getservbyport(htons(g_env.results[g_env.ite_ip].ports_result[i].port), "udp");
-			// if (!serv) serv = getservbyport(htons(g_env.results[g_env.ite_ip].ports_result[i].port), "udp");
             int printed = 0;
 			printf("%*d%*s        ", 5, g_env.results[g_env.ite_ip].ports_result[i].port, 19, serv ? serv->s_name : "Unassigned");
             int written = 0;
@@ -263,8 +266,8 @@ int			display_ports(bool openness) {
 
                 
                 printed++;
-                if (printed==4) {
-                    printf("\n%*s", 30, "");
+                if (printed==5) {
+                    printf("\n%*s", 32, "");
                     written = 0;
                 }
 
@@ -291,11 +294,15 @@ int			display_ports(bool openness) {
                         written++;
                         break;
                     case 5:
+                        printf("MAIMON(%s) ", state);
+                        written += 3;
+                        break;
+                    case 6:
                         printf("UDP(%s) ", state);
                         break;
                 }
             }
-            printf("%*s\n", 40 - written, openness ? "Open" : "Closed");
+            printf("%*s\n", 47 - written, openness ? "Open" : "Closed");
 		}
 	}
 	printf("\n");
@@ -334,4 +341,6 @@ int main(int ac, char **av) {
     close(g_env.socket_fd);
     pthread_mutex_destroy(&(g_env.launch_thread_m));
     pthread_mutex_destroy(&(g_env.pcap_compile_m));
+
+    return 0;
 }

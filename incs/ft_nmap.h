@@ -35,9 +35,9 @@
 # include <stdint.h>
 # include <sys/poll.h>
 
-# define NB_OPT 6
+# define NB_OPT 10
 
-# define NB_SCAN 6
+# define NB_SCAN 7
 
 // scans
 # define SYN 0x01
@@ -45,7 +45,8 @@
 # define ACK 0x04
 # define FIN 0x08
 # define XMS 0x10
-# define UDP 0x20
+# define MMN 0x20
+# define UDP 0x40
 
 // tcp flags
 # define NULL_F 0x00
@@ -64,11 +65,15 @@
 # define PACKET_BUFFER_SIZE 64
 
 typedef struct	s_pars {
-	char		*port;
+	char		*s_port;
+	char		*d_port;
 	char		*ip;
 	char		*file;
 	char		*speedup;
 	char		*scan;
+	char		*ttl;
+	char		*host_timeout;
+	char		*pbt;
 }				t_pars;
 
 typedef struct in_addr t_addr;
@@ -103,18 +108,20 @@ typedef struct s_env {
     */
     int nb_threads;
 
-    int			timeout;
+    int			host_timeout;
     int			*port;
     int			nb_port;
     char		*file;
     int			scan;
+    int			ttl;
+    int         packet_buffer_timeout;
     t_network	 *ip_and_hosts; // can be array ?
     //t_list *scan_types; // can be array ?
 
     /*
     ** general storage structs for threads and results
     */
-    int src_port;
+    int s_port;
     int socket_fd;
 
     int ite_ip;
@@ -124,6 +131,7 @@ typedef struct s_env {
     char *device;
     pthread_t *scanner_threads;
     pthread_t *pcap_thread;
+    pthread_t *alarm_thread;
     pcap_t *handle;
     bool *threads_availability;
     t_result *results; // array of size len(ip/hosts)

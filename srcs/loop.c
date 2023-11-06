@@ -33,6 +33,9 @@ int scan_to_flags(int scan) {
         return FIN_F;
     if (scan&XMS)
         return FIN_F|PSH_F|URG_F;
+    if (scan&MMN) {
+        return FIN_F|ACK_F;
+    }
     return FIN_F|PSH_F|URG_F|SYN_F|RST_F;
 }
 
