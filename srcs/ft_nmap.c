@@ -26,8 +26,8 @@ int get_interface(void) {
 }
 
 void init_global(void) {
-    g_env.packet_buffer_timeout = 500;
-    g_env.host_timeout = 700000; // microseconds
+    g_env.packet_buffer_timeout = 400;
+    g_env.host_timeout = 600000; // microseconds
     g_env.ttl = 64;
     g_env.s_port = 80;
     g_env.nb_port = 0;
