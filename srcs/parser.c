@@ -278,9 +278,16 @@ static int		format_scan(char *scan)
 					found = true;
 				}
 		}
+		if (!found) {
+			display_scan_unknown(scan_split[i]);
+			while (scan_split[i]) {
+				free(scan_split[i]);
+				i++;
+			}
+			free(scan_split);
+			return (-1);
+		}
 		free(scan_split[i]);
-		if (!found)
-			return (display_scan_unknown(scan_split[i]));
 		i++;
 	}
 	free(scan_split);
@@ -422,7 +429,8 @@ int				parser(int ac, char **av, t_pars *data)
 			//is_valid_opt returns -1 in case the opt doesn't exist
 			if ((opt_off = is_valid_opt(av[i])) == -1)
 				return (display_unknown(av[0], av[i]));
-			if (opt_off == NB_OPT)
+			printf("off %d -- nb_off %d\n", opt_off, NB_OPT);
+			if (opt_off == NB_OPT - 1)
 					return (display_help(av[0]));
 			else {
 				if (i + 1 == ac)
