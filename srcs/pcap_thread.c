@@ -60,7 +60,7 @@ void packet_handler_ACK(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
         int port_index = port_to_port_index(htons(tcp->th_sport));
 	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
         if ((tcp->th_flags & TH_RST) == TH_RST)
-	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[2]].state = CLOSE;
+	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[2]].state = UNFILTERED;
    }
 }
 

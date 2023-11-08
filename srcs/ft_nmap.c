@@ -98,7 +98,7 @@ void init_scan_result(int it_ip, int it_port) {
                 g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;
                 break ;
             case 2:
-                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = UNFILTERED;
+                g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = FILTERED;
                 break ;
             case 3:
                 g_env.results[it_ip].ports_result[it_port].scan_results[g_env.scan_bit_to_index[i]].state = OPEN | FILTERED;

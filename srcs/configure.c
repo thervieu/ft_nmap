@@ -62,7 +62,7 @@ char *get_working_interface_ip(void) {
 	ifa = ifap;
 	while (ifa->ifa_next != NULL)
 	{
-		if (ifa->ifa_addr->sa_family == AF_INET && ft_strcmp(ifa->ifa_name, g_env.device) == 0)
+		if (ifa->ifa_addr->sa_family == AF_INET)
 		{
 			addr = ft_strdup(inet_ntoa(((struct sockaddr_in*)ifa->ifa_addr)->sin_addr));
 			break;
