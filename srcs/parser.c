@@ -316,6 +316,8 @@ static int		format_file(char *file)
 	char	*content;
 	char	**hosts;
 
+	if (g_env.nb_ips != 0)
+		return (-1);
 	if ((fd = open(file, O_RDONLY)) < 0)
 	{
 		printf("An error occured while openning %s\n", file);
@@ -352,6 +354,8 @@ static int		format_file(char *file)
 
 static int		format_ip(char *ip)
 {
+	if (g_env.nb_ips != 0)
+		return (-1);
 	g_env.nb_ips = 1;
 	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
 	if (get_ip_addr(ip, 0) == -1)
@@ -429,7 +433,6 @@ int				parser(int ac, char **av, t_pars *data)
 			//is_valid_opt returns -1 in case the opt doesn't exist
 			if ((opt_off = is_valid_opt(av[i])) == -1)
 				return (display_unknown(av[0], av[i]));
-			printf("off %d -- nb_off %d\n", opt_off, NB_OPT);
 			if (opt_off == NB_OPT - 1)
 					return (display_help(av[0]));
 			else {
