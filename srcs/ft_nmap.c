@@ -17,10 +17,23 @@ int get_interface(void) {
         fprintf(stderr, "Error finding network devices: %s\n", errbuf);
         return 1;
     }
-    g_env.device = ft_strdup(alldevs->name);
+    pcap_if_t *free_me = alldevs;
+    while (alldevs) {
+        pcap_addr_t *a = alldevs->addresses;
+        while (a) {
+            if (a->addr->sa_family == AF_INET)
+            {
+                g_env.device = ft_strdup(alldevs->name);
+                pcap_freealldevs(free_me);
+                return 0;
+            }
+            a = a->next;
+        }
+        alldevs = alldevs->next;
+    }
 
     // Free the list of network devices
-    pcap_freealldevs(alldevs);
+    pcap_freealldevs(free_me);
 
     return 0;
 }

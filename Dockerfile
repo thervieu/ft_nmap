@@ -8,7 +8,7 @@ RUN apt-get install -y traceroute
 RUN apt-get install -y libpcap-dev
 RUN apt-get install -y tcpdump
 RUN apt-get install -y iproute2
-RUN apt install nmap
+RUN apt-get install -y nmap
 
 ADD . /app
 WORKDIR /app

@@ -60,9 +60,9 @@ char *get_working_interface_ip(void) {
 	if (getifaddrs(&ifap) < 0)
 		error_exit("Error getifaddrs", 1);
 	ifa = ifap;
-	while (ifa->ifa_next != NULL)
+	while (ifa)
 	{
-		if (ifa->ifa_addr->sa_family == AF_INET)
+		if (ifa->ifa_addr->sa_family == AF_INET && ft_strcmp(ifa->ifa_name, g_env.device) == 0)
 		{
 			addr = ft_strdup(inet_ntoa(((struct sockaddr_in*)ifa->ifa_addr)->sin_addr));
 			break;

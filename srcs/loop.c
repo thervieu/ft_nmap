@@ -206,12 +206,10 @@ void ip_loop(void) {
         gettimeofday(&tv_end, NULL);
         int		ret = tv_end.tv_usec - tv_beg.tv_usec;
 
-        if (g_env.nb_ips!=1) {
-            printf("########################################################################\n\n");
-            printf("Hostname: %s\n", g_env.ip_and_hosts[g_env.ite_ip].hostname);
-            printf("Ip address: %s\n", inet_ntoa(g_env.ip_and_hosts[g_env.ite_ip].ip));
-            printf("Scan took %ld.%d secs\n\n", tv_end.tv_sec - tv_beg.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
-        }
+        printf("########################################################################\n\n");
+        printf("Hostname: %s\n", g_env.ip_and_hosts[g_env.ite_ip].hostname);
+        printf("Ip address: %s\n", inet_ntoa(g_env.ip_and_hosts[g_env.ite_ip].ip));
+        printf("Scan took %ld.%d secs\n\n", tv_end.tv_sec - tv_beg.tv_sec - (ret > 0 ? 0 : 1), (ret > 0 ? ret / 1000 : 1000 - ret / 1000));
         int open_ports_nb = display_ports(true);
         if (g_env.nb_port <= 26 || g_env.nb_port - open_ports_nb <= 26) {
             display_ports(false);
