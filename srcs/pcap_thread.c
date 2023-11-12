@@ -14,134 +14,132 @@ void packet_handler_SYN(unsigned char *user, const struct pcap_pkthdr *pkthdr, c
     (void)pkthdr;
 
 	struct iphdr *ip = (struct iphdr*)(packet + sizeof(struct sll_header));
+    if (ip->protocol == IPPROTO_TCP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
+            int port_index = port_to_port_index(htons(tcp->th_sport));
 
-   if (ip->protocol == IPPROTO_TCP) {
-	    struct tcphdr *tcp = (struct tcphdr*)(packet + sizeof(struct sll_header) + sizeof(struct iphdr));
-        int port_index = port_to_port_index(htons(tcp->th_sport));
-
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
-        if (tcp->th_flags == (TH_SYN | TH_ACK)) {
-            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = OPEN;
-        }
-        else if ((tcp->th_flags & TH_RST) == TH_RST) {
-            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = CLOSE;
-        }
-   }
-
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+            if (tcp->th_flags == (TH_SYN | TH_ACK)) {
+                g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = OPEN;
+            }
+            else if ((tcp->th_flags & TH_RST) == TH_RST) {
+                g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[0]].state = CLOSE;
+            }
+    }
 }
 
 void packet_handler_NULL(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     (void)user;
     (void)pkthdr;
 
-   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-   if (ip->protocol == IPPROTO_TCP) {
-        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
-        int port_index = port_to_port_index(htons(tcp->th_sport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
-        if ((tcp->th_flags & TH_RST) == TH_RST)
-	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[1]].state = CLOSE;
-   }
-   else if (ip->protocol == IPPROTO_ICMP) {
-        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
-        int port_index = port_to_port_index(htons(tcp->th_dport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
-        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[1]].state = FILTERED;
-   }
+    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+    if (ip->protocol == IPPROTO_TCP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+            int port_index = port_to_port_index(htons(tcp->th_sport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+            if ((tcp->th_flags & TH_RST) == TH_RST)
+                g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[1]].state = CLOSE;
+    }
+    else if (ip->protocol == IPPROTO_ICMP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+            int port_index = port_to_port_index(htons(tcp->th_dport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
+            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[1]].state = FILTERED;
+    }
 }
 
 void packet_handler_ACK(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     (void)user;
     (void)pkthdr;
 
-   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-   if (ip->protocol == IPPROTO_TCP) {
-        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
-        int port_index = port_to_port_index(htons(tcp->th_sport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
-        if ((tcp->th_flags & TH_RST) == TH_RST)
-	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[2]].state = UNFILTERED;
-   }
+    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+    if (ip->protocol == IPPROTO_TCP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+            int port_index = port_to_port_index(htons(tcp->th_sport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+            if ((tcp->th_flags & TH_RST) == TH_RST)
+                g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[2]].state = UNFILTERED;
+    }
 }
 
 void packet_handler_FIN(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     (void)user;
     (void)pkthdr;
 
-   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-   if (ip->protocol == IPPROTO_TCP) {
-        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
-        int port_index = port_to_port_index(htons(tcp->th_sport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
-        if ((tcp->th_flags & TH_RST) == TH_RST)
-	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[3]].state = CLOSE;
-   }
-   else if (ip->protocol == IPPROTO_ICMP) {
-        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
-        int port_index = port_to_port_index(htons(tcp->th_dport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
-        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[3]].state = FILTERED;
-   }
+    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+    if (ip->protocol == IPPROTO_TCP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+            int port_index = port_to_port_index(htons(tcp->th_sport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+            if ((tcp->th_flags & TH_RST) == TH_RST)
+                g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[3]].state = CLOSE;
+    }
+    else if (ip->protocol == IPPROTO_ICMP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+            int port_index = port_to_port_index(htons(tcp->th_dport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
+            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[3]].state = FILTERED;
+    }
 }
 
 void packet_handler_XMAS(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     (void)user;
     (void)pkthdr;
 
-   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-   if (ip->protocol == IPPROTO_TCP) {
-        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
-        int port_index = port_to_port_index(htons(tcp->th_sport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
-        if ((tcp->th_flags & TH_RST) == TH_RST)
-	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = CLOSE;
-   }
-   else if (ip->protocol == IPPROTO_ICMP) {
-        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
-        int port_index = port_to_port_index(htons(tcp->th_dport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
-        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = FILTERED;
-   }
+    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+    if (ip->protocol == IPPROTO_TCP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+            int port_index = port_to_port_index(htons(tcp->th_sport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+            if ((tcp->th_flags & TH_RST) == TH_RST)
+                g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = CLOSE;
+    }
+    else if (ip->protocol == IPPROTO_ICMP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+            int port_index = port_to_port_index(htons(tcp->th_dport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
+            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = FILTERED;
+    }
 }
 
 void packet_handler_MAIMON(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     (void)user;
     (void)pkthdr;
 
-   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-   if (ip->protocol == IPPROTO_TCP) {
-        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
-        int port_index = port_to_port_index(htons(tcp->th_sport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
-        if ((tcp->th_flags & TH_RST) == TH_RST)
-	        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = CLOSE;
-   }
-   else if (ip->protocol == IPPROTO_ICMP) {
-        struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
-        int port_index = port_to_port_index(htons(tcp->th_dport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
-        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = FILTERED;
-   }
+    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+    if (ip->protocol == IPPROTO_TCP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + sizeof(struct iphdr));
+            int port_index = port_to_port_index(htons(tcp->th_sport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_sport);
+            if ((tcp->th_flags & TH_RST) == TH_RST)
+                g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = CLOSE;
+    }
+    else if (ip->protocol == IPPROTO_ICMP) {
+            struct tcphdr *tcp = (struct tcphdr*)(packet+sizeof(struct sll_header) + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+            int port_index = port_to_port_index(htons(tcp->th_dport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(tcp->th_dport);
+            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[4]].state = FILTERED;
+    }
 }
 
 void packet_handler_UDP(unsigned char *user, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) {
     (void)user;
     (void)pkthdr;
 
-   struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
-   if (ip->protocol == IPPROTO_UDP) {
-        struct udphdr *udp = (struct udphdr*)(ip + sizeof(struct iphdr));
-        int port_index = port_to_port_index(htons(udp->uh_sport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(udp->uh_sport);
-        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[5]].state = OPEN;
-   }
-   else if (ip->protocol == IPPROTO_ICMP) {
-        struct icmphdr *icmp = (struct icmphdr*)(ip + sizeof(struct iphdr));
-        struct udphdr *udp = (struct udphdr*)(ip + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
-        int port_index = port_to_port_index(htons(udp->uh_dport));
-	    g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(udp->uh_dport);
-        g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[5]].state = (icmp->code == 3) ? CLOSE : FILTERED;
-   }
+    struct iphdr *ip = (struct iphdr*)(packet+sizeof(struct sll_header));
+    if (ip->protocol == IPPROTO_UDP) {
+            struct udphdr *udp = (struct udphdr*)(ip + sizeof(struct iphdr));
+            int port_index = port_to_port_index(htons(udp->uh_sport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(udp->uh_sport);
+            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[5]].state = OPEN;
+    }
+    else if (ip->protocol == IPPROTO_ICMP) {
+            struct icmphdr *icmp = (struct icmphdr*)(ip + sizeof(struct iphdr));
+            struct udphdr *udp = (struct udphdr*)(ip + (2*sizeof(struct iphdr) + sizeof(struct icmphdr)));
+            int port_index = port_to_port_index(htons(udp->uh_dport));
+            g_env.results[g_env.ite_ip].ports_result[port_index].port = htons(udp->uh_dport);
+            g_env.results[g_env.ite_ip].ports_result[port_index].scan_results[g_env.scan_bit_to_index[5]].state = (icmp->code == 3) ? CLOSE : FILTERED;
+    }
 }
 
 void	host_timeout_handler(int signal)
