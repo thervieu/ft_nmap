@@ -356,10 +356,10 @@ static int		format_ip(char *ip)
 {
 	if (g_env.nb_ips != 0)
 		return (-1);
-	g_env.nb_ips = 1;
 	g_env.ip_and_hosts = (t_network *)malloc(sizeof(t_network) * g_env.nb_ips);
 	if (get_ip_addr(ip, 0) == -1)
 		return (-1);
+	g_env.nb_ips = 1;
 	g_env.ip_and_hosts[0].hostname = ft_strdup(ip);
 	g_env.ip_and_hosts[0].unknown = false;
 	return (0);

@@ -9,10 +9,11 @@ RUN apt-get install -y libpcap-dev
 RUN apt-get install -y tcpdump
 RUN apt-get install -y iproute2
 RUN apt-get install -y nmap
+RUN apt-get install -y valgrind
 
 ADD . /app
 WORKDIR /app
 
 RUN cd /app && make fclean && make
 
-ENTRYPOINT ["sh"]
+ENTRYPOINT ["bash"]
