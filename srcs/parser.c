@@ -5,11 +5,12 @@ int		display_help(char *prog_name)
 	printf("Help Screen\n\
 %s [OPTIONS]\n\
 --help Print this help screen\n\
---src_port port to scan with (eg: 80 by default, 4242)\n\
---dst_port ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)\n\
 --ip ip addresses to scan in dot format\n\
 --file File name containing IP addresses to scan,\n\
+--speedup [0 to 250] number of threads to scan with\n\
 --scan SYN/NULL/FIN/XMAS/ACK/MAIMON/UDP\n\
+--dst_port ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)\n\
+--src_port port to scan with (eg: 80 by default, 4242)\n\
 --ttl [1-255] number of time-to-live in ip header\n\
 --host_timeout [500 min] time in ms to wait for host response\n\
 --pkt_buf_timeout [100 min] interval to read the packet buffer\
